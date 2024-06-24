@@ -34,13 +34,14 @@ public class VaultTimerCommand
     {
         LiteralArgumentBuilder<CommandSourceStack> baseLiteral = Commands.literal("the_vault_extra").
             requires(stack -> stack.hasPermission(1));
+        LiteralArgumentBuilder<CommandSourceStack> vaultLiteral = Commands.literal("vault");
 
         LiteralArgumentBuilder<CommandSourceStack> togglePause = Commands.literal("togglePause").
             executes(ctx -> togglePause(ctx.getSource().getPlayerOrException().getLevel())).
             then(Commands.argument("player", EntityArgument.players()).
                 executes(ctx -> togglePause(EntityArgument.getPlayer(ctx, "player").getLevel())));
 
-        dispatcher.register(baseLiteral.then(togglePause));
+        dispatcher.register(baseLiteral.then(vaultLiteral.then(togglePause)));
     }
 
 

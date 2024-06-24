@@ -51,6 +51,8 @@ public class ModifiersCommand
     {
         LiteralArgumentBuilder<CommandSourceStack> baseLiteral = Commands.literal("the_vault_extra").
             requires(stack -> stack.hasPermission(1));
+        LiteralArgumentBuilder<CommandSourceStack> vaultLiteral = Commands.literal("vault");
+
         LiteralArgumentBuilder<CommandSourceStack> baseAdd = Commands.literal("addModifier");
         LiteralArgumentBuilder<CommandSourceStack> baseRemove = Commands.literal("removeModifier");
 
@@ -180,7 +182,7 @@ public class ModifiersCommand
                 executes(ctx -> appliedEffect(ctx.getSource().getPlayerOrException().getLevel(),
                     1)));
 
-        dispatcher.register(baseLiteral.then(baseAdd).then(baseRemove));
+        dispatcher.register(baseLiteral.then(vaultLiteral.then(baseAdd).then(baseRemove)));
     }
 
 

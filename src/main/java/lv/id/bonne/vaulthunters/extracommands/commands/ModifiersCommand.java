@@ -23,6 +23,7 @@ import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.HoverEvent;
@@ -53,80 +54,130 @@ public class ModifiersCommand
         LiteralArgumentBuilder<CommandSourceStack> baseAdd = Commands.literal("addModifier");
         LiteralArgumentBuilder<CommandSourceStack> baseRemove = Commands.literal("removeModifier");
 
-        baseAdd.then(Commands.literal("positive").
+        baseAdd.
+            then(Commands.literal("positive").
                 then(Commands.argument("count", IntegerArgumentType.integer(1, 999)).
-                    executes(ctx -> positiveEffect(ctx.getSource().getLevel(),
+                    then(Commands.argument("player", EntityArgument.players()).
+                        executes(ctx -> positiveEffect(EntityArgument.getPlayer(ctx, "player").getLevel(),
+                            ctx.getArgument("count", Integer.class),
+                            true))).
+                    executes(ctx -> positiveEffect(ctx.getSource().getPlayerOrException().getLevel(),
                         ctx.getArgument("count", Integer.class),
                         true))).
-                executes(ctx -> positiveEffect(ctx.getSource().getLevel(),
+                executes(ctx -> positiveEffect(ctx.getSource().getPlayerOrException().getLevel(),
                     1,
                     true))).
-            then(Commands.literal("negative").then(Commands.argument("count", IntegerArgumentType.integer(1, 999)).
-                    executes(ctx -> negativeEffect(ctx.getSource().getLevel(),
+            then(Commands.literal("negative").
+                then(Commands.argument("count", IntegerArgumentType.integer(1, 999)).
+                    then(Commands.argument("player", EntityArgument.players()).
+                        executes(ctx -> negativeEffect(EntityArgument.getPlayer(ctx, "player").getLevel(),
+                            ctx.getArgument("count", Integer.class),
+                            true))).
+                    executes(ctx -> negativeEffect(ctx.getSource().getPlayerOrException().getLevel(),
                         ctx.getArgument("count", Integer.class),
                         true))).
-                executes(ctx -> negativeEffect(ctx.getSource().getLevel(),
+                executes(ctx -> negativeEffect(ctx.getSource().getPlayerOrException().getLevel(),
                     1,
                     true))).
-            then(Commands.literal("curse").then(Commands.argument("count", IntegerArgumentType.integer(1, 999)).
-                    executes(ctx -> curseEffect(ctx.getSource().getLevel(),
+            then(Commands.literal("curse").
+                then(Commands.argument("count", IntegerArgumentType.integer(1, 999)).
+                    then(Commands.argument("player", EntityArgument.players()).
+                        executes(ctx -> curseEffect(EntityArgument.getPlayer(ctx, "player").getLevel(),
+                            ctx.getArgument("count", Integer.class),
+                            true))).
+                    executes(ctx -> curseEffect(ctx.getSource().getPlayerOrException().getLevel(),
                         ctx.getArgument("count", Integer.class),
                         true))).
-                executes(ctx -> curseEffect(ctx.getSource().getLevel(),
+                executes(ctx -> curseEffect(ctx.getSource().getPlayerOrException().getLevel(),
                     1,
                     true))).
-            then(Commands.literal("chaotic").then(Commands.argument("count", IntegerArgumentType.integer(1, 999)).
-                executes(ctx -> chaoticEffect(ctx.getSource().getLevel(), ctx.getArgument("count", Integer.class))))).
+            then(Commands.literal("chaotic").
+                then(Commands.argument("count", IntegerArgumentType.integer(1, 999)).
+                    then(Commands.argument("player", EntityArgument.players()).
+                        executes(ctx -> chaoticEffect(EntityArgument.getPlayer(ctx, "player").getLevel(),
+                            ctx.getArgument("count", Integer.class)))).
+                    executes(ctx -> chaoticEffect(ctx.getSource().getPlayerOrException().getLevel(),
+                        ctx.getArgument("count", Integer.class))))).
             then(Commands.literal("specific").
-                then(Commands.argument("modifier", ResourceLocationArgument.id()).suggests(SUGGEST_MODIFIER).
+                then(Commands.argument("modifier", ResourceLocationArgument.id()).
+                    suggests(SUGGEST_MODIFIER).
                     then(Commands.argument("count", IntegerArgumentType.integer(1, 999)).
-                        executes(ctx -> specificEffect(ctx.getSource().getLevel(),
+                        then(Commands.argument("player", EntityArgument.players()).
+                            executes(ctx -> specificEffect(EntityArgument.getPlayer(ctx, "player").getLevel(),
+                                ctx.getArgument("modifier", ResourceLocation.class),
+                                ctx.getArgument("count", Integer.class),
+                                true))).
+                        executes(ctx -> specificEffect(ctx.getSource().getPlayerOrException().getLevel(),
                             ctx.getArgument("modifier", ResourceLocation.class),
                             ctx.getArgument("count", Integer.class),
                             true))).
-                    executes(ctx -> specificEffect(ctx.getSource().getLevel(),
+                    executes(ctx -> specificEffect(ctx.getSource().getPlayerOrException().getLevel(),
                         ctx.getArgument("modifier", ResourceLocation.class),
                         1,
                         true))));
 
-        baseRemove.then(Commands.literal("positive").
+        baseRemove.
+            then(Commands.literal("positive").
                 then(Commands.argument("count", IntegerArgumentType.integer(1, 999)).
-                    executes(ctx -> positiveEffect(ctx.getSource().getLevel(),
+                    then(Commands.argument("player", EntityArgument.players()).
+                        executes(ctx -> positiveEffect(EntityArgument.getPlayer(ctx, "player").getLevel(),
+                            ctx.getArgument("count", Integer.class),
+                            false))).
+                    executes(ctx -> positiveEffect(ctx.getSource().getPlayerOrException().getLevel(),
                         ctx.getArgument("count", Integer.class),
                         false))).
-                executes(ctx -> positiveEffect(ctx.getSource().getLevel(),
+                executes(ctx -> positiveEffect(ctx.getSource().getPlayerOrException().getLevel(),
                     1,
                     false))).
-            then(Commands.literal("negative").then(Commands.argument("count", IntegerArgumentType.integer(1, 999)).
-                    executes(ctx -> negativeEffect(ctx.getSource().getLevel(),
+            then(Commands.literal("negative").
+                then(Commands.argument("count", IntegerArgumentType.integer(1, 999)).
+                    then(Commands.argument("player", EntityArgument.players()).
+                        executes(ctx -> negativeEffect(EntityArgument.getPlayer(ctx, "player").getLevel(),
+                            ctx.getArgument("count", Integer.class),
+                            false))).
+                    executes(ctx -> negativeEffect(ctx.getSource().getPlayerOrException().getLevel(),
                         ctx.getArgument("count", Integer.class),
                         false))).
-                executes(ctx -> negativeEffect(ctx.getSource().getLevel(),
+                executes(ctx -> negativeEffect(ctx.getSource().getPlayerOrException().getLevel(),
                     1,
                     false))).
-            then(Commands.literal("curse").then(Commands.argument("count", IntegerArgumentType.integer(1, 999)).
-                    executes(ctx -> curseEffect(ctx.getSource().getLevel(),
+            then(Commands.literal("curse").
+                then(Commands.argument("count", IntegerArgumentType.integer(1, 999)).
+                    then(Commands.argument("player", EntityArgument.players()).
+                        executes(ctx -> curseEffect(EntityArgument.getPlayer(ctx, "player").getLevel(),
+                            ctx.getArgument("count", Integer.class),
+                            false))).
+                    executes(ctx -> curseEffect(ctx.getSource().getPlayerOrException().getLevel(),
                         ctx.getArgument("count", Integer.class),
                         false))).
-                executes(ctx -> curseEffect(ctx.getSource().getLevel(),
+                executes(ctx -> curseEffect(ctx.getSource().getPlayerOrException().getLevel(),
                     1,
                     false))).
             then(Commands.literal("specific").
                 then(Commands.argument("modifier", ResourceLocationArgument.id()).
                     suggests(SUGGEST_MODIFIER).
                     then(Commands.argument("count", IntegerArgumentType.integer(1, 999)).
-                        executes(ctx -> specificEffect(ctx.getSource().getLevel(),
+                        then(Commands.argument("player", EntityArgument.players()).
+                            executes(ctx -> specificEffect(EntityArgument.getPlayer(ctx, "player").getLevel(),
+                                ctx.getArgument("modifier", ResourceLocation.class),
+                                ctx.getArgument("count", Integer.class),
+                                false))).
+                        executes(ctx -> specificEffect(ctx.getSource().getPlayerOrException().getLevel(),
                             ctx.getArgument("modifier", ResourceLocation.class),
                             ctx.getArgument("count", Integer.class),
                             false))).
-                    executes(ctx -> specificEffect(ctx.getSource().getLevel(),
+                    executes(ctx -> specificEffect(ctx.getSource().getPlayerOrException().getLevel(),
                         ctx.getArgument("modifier", ResourceLocation.class),
                         1,
                         false)))).
-            then(Commands.literal("random").then(Commands.argument("count", IntegerArgumentType.integer(1, 999)).
-                    executes(ctx -> appliedEffect(ctx.getSource().getLevel(),
+            then(Commands.literal("random").
+                then(Commands.argument("count", IntegerArgumentType.integer(1, 999)).
+                    then(Commands.argument("player", EntityArgument.players()).
+                        executes(ctx -> appliedEffect(EntityArgument.getPlayer(ctx, "player").getLevel(),
+                            ctx.getArgument("count", Integer.class)))).
+                    executes(ctx -> appliedEffect(ctx.getSource().getPlayerOrException().getLevel(),
                         ctx.getArgument("count", Integer.class)))).
-                executes(ctx -> appliedEffect(ctx.getSource().getLevel(),
+                executes(ctx -> appliedEffect(ctx.getSource().getPlayerOrException().getLevel(),
                     1)));
 
         dispatcher.register(baseLiteral.then(baseAdd).then(baseRemove));

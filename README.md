@@ -22,3 +22,6 @@ Removing commands:
 
 Toggling Vault Clock:
 - `/the_vault_extra vault togglePause [<player>]` - toggles vault timer
+
+Bounty:
+- `/the_vault_extra bounty complete [<player>] [<bounty_id>]` - completes bounty for a player.

@@ -3,6 +3,7 @@ package lv.id.bonne.vaulthunters.extracommands;
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 
+import lv.id.bonne.vaulthunters.extracommands.commands.BountyCompleteCommand;
 import lv.id.bonne.vaulthunters.extracommands.commands.ModifiersCommand;
 import lv.id.bonne.vaulthunters.extracommands.commands.VaultTimerCommand;
 import lv.id.bonne.vaulthunters.extracommands.configs.Configuration;
@@ -44,6 +45,7 @@ public class ExtraCommands
         {
             ModifiersCommand.register(event.getDispatcher());
             VaultTimerCommand.register(event.getDispatcher());
+            BountyCompleteCommand.register(event.getDispatcher());
         }
     }
 

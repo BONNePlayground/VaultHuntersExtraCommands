@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 
 import lv.id.bonne.vaulthunters.extracommands.commands.ModifiersCommand;
+import lv.id.bonne.vaulthunters.extracommands.commands.VaultTimerCommand;
 import lv.id.bonne.vaulthunters.extracommands.configs.Configuration;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -42,6 +43,7 @@ public class ExtraCommands
         public static void registerCommands(RegisterCommandsEvent event)
         {
             ModifiersCommand.register(event.getDispatcher());
+            VaultTimerCommand.register(event.getDispatcher());
         }
     }
 

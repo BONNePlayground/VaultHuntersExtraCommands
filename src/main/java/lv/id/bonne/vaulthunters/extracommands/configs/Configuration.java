@@ -2,10 +2,13 @@ package lv.id.bonne.vaulthunters.extracommands.configs;
 
 
 
-import java.util.Arrays;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import java.util.List;
+import java.util.Objects;
 
 import iskallia.vault.core.vault.modifier.registry.VaultModifierRegistry;
+import iskallia.vault.core.vault.pylon.PylonBuff;
+import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.ForgeConfigSpec;
 
@@ -25,7 +28,7 @@ public class Configuration
         this.positiveModifiers = builder.
             comment("The list of positive modifiers").
             defineList("positive",
-                Arrays.asList("the_vault:prismatic",
+                List.of("the_vault:prismatic",
                     "the_vault:prosperous",
                     "the_vault:soul_surge",
                     "the_vault:treasure",
@@ -58,7 +61,7 @@ public class Configuration
         this.negativeModifiers = builder.
             comment("The list of negative modifiers").
             defineList("negative",
-                Arrays.asList("the_vault:mob_increase",
+                List.of("the_vault:mob_increase",
                     "the_vault:infuriated_mobs",
                     "the_vault:brutal_mobs",
                     "the_vault:chunky_mobs2",
@@ -79,7 +82,7 @@ public class Configuration
         this.curseModifiers = builder.
             comment("The list of curse modifiers").
             defineList("curse",
-                Arrays.asList("the_vault:antiheal",
+                List.of("the_vault:antiheal",
                     "the_vault:hunger",
                     "the_vault:tired",
                     "the_vault:slowed",
@@ -113,7 +116,7 @@ public class Configuration
         this.chaoticModifiers = builder.
             comment("The list of modifiers that will be added with chaotic command").
             defineList("chaotic",
-                Arrays.asList("the_vault:wild",
+                List.of("the_vault:wild",
                     "the_vault:furious_mobs",
                     "the_vault:chunky_mobs",
                     "the_vault:trapped",
@@ -132,12 +135,46 @@ public class Configuration
         this.protectedModifiers = builder.
             comment("The list of modifiers that will be protected from adding or removing. \n Blacklist essentially.").
             defineList("blacklist",
-                Arrays.asList("the_vault:soul_flame",
+                List.of("the_vault:soul_flame",
                     "the_vault:chaotic",
                     "the_vault:soul_objective"),
                 entry -> entry instanceof String value &&
                     (VaultModifierRegistry.getAll().findAny().isEmpty() ||
                         VaultModifierRegistry.getOpt(ResourceLocation.tryParse(value)).isPresent()));
+
+        this.pylonEffects = builder.
+            comment("The list of pylon effects that can be applied to a player. Pylon effects can be found in `pylon_placeholder.json` files in ").
+            comment("the_vault/gen/1.0/palettes/generic/").
+            defineList("pylonEffects",
+                List.of(
+                    "the_vault:pylon{Config:{type:effect,effect:regeneration,amplifier:3,duration:300,color:695fe80d,description:\"Grants +3 Regeneration for 15 seconds\"}}",
+                    "the_vault:pylon{Config:{type:attribute,attribute:generic.max_health,amount:8.0,operation:ADDITION,duration:2400,color:6900FF00,description:\"Grants 4 bonus hearts for 2 minutes\"}}",
+                    "the_vault:pylon{Config:{type:stat,stat:ITEM_RARITY,addend:0.20,duration:1200,color:69ff9c00,description:\"+20% Item Rarity for 1 minute\"}}",
+                    "the_vault:pylon{Config:{type:effect,effect:regeneration,amplifier:10,duration:60,color:69A3FF67,description:\"Regenerates all your health\"}}",
+                    "the_vault:pylon{Config:{type:effect,effect:regeneration,amplifier:1,duration:2400,color:69ff42ec,description:\"Grants +1 Regeneration for 2 minutes\"}}",
+                    "the_vault:pylon{Config:{type:effect,effect:speed,amplifier:1,duration:3600,color:69e115f3,description:\"Grants +1 Speed for 3 minutes\"}}",
+                    "the_vault:pylon{Config:{type:effect,effect:strength,amplifier:1,duration:3600,color:69e21b1b,description:\"Grants +1 Strength for 3 minutes\"}}",
+                    "the_vault:pylon{Config:{type:effect,effect:absorption,amplifier:1,duration:2400,color:6900FF00,description:\"Grants 2 absorption hearts for 2 minutes\"}}",
+                    "the_vault:pylon{Config:{type:potion,charges:2,color:6900FF00,description:\"Recharges 2 potion charges\"}}",
+                    "the_vault:pylon{Config:{type:mana,missingManaPercent:1.0,color:692060b7,description:\"Refills your mana\"}}",
+                    "the_vault:pylon{Config:{type:time,ticks:1200,color:69FFFF00,description:\"Adds 1 minute to the vault timer\"}}",
+                    "the_vault:pylon{Config:{type:time,ticks:2400,color:69fff600,description:\"Adds 2 minutes to the vault timer\"}}",
+                    "the_vault:pylon{Config:{type:stat,stat:ITEM_RARITY,addend:0.20,duration:1200,color:69EAFF00,description:\"+20% Item Rarity for 1 minute\"}}",
+                    "the_vault:pylon{Config:{type:stat,stat:ITEM_QUANTITY,addend:0.20,duration:1200,color:69ff9c00,description:\"+20% Item Quantity for 1 minute\"}}",
+                    "the_vault:pylon{Config:{type:stat,stat:DURABILITY_WEAR_REDUCTION,addend:0.5,duration:6000,color:6985e8e7,description:\"+50% Durability Damage Reduction for 5 minutes\"}}",
+                    "the_vault:pylon{Config:{type:stat,stat:DURABILITY_WEAR_REDUCTION,addend:1.0,duration:6000,color:69c5f0f0,description:\"+100% Durability Damage Reduction for 5 minutes\"}}",
+                    "the_vault:pylon{Config:{type:stat,stat:ITEM_RARITY,addend:1.00,duration:6000,color:69EAFF00,description:\"+100% Item Rarity for 5 minutes\",uber:1b,uberColor:69ff8a14}}",
+                    "the_vault:pylon{Config:{type:stat,stat:ITEM_QUANTITY,addend:1.00,duration:6000,color:69ff9c00,description:\"+100% Item Quantity for 5 minutes\",uber:1b,uberColor:69ff9c00}}",
+                    "the_vault:pylon{Config:{type:time,ticks:6000,color:69FFFF00,description:\"Adds 5 minutes to the vault timer\",uber:1b,uberColor:6954f9ff}}",
+                    "the_vault:pylon{Config:{type:effect,effect:speed,amplifier:3,duration:6000,color:69e115f3,description:\"Grants +3 Speed for 5 minutes\",uber:1b,uberColor:69ffff87}}",
+                    "the_vault:pylon{Config:{type:effect,effect:strength,amplifier:10,duration:6000,color:69e21b1b,description:\"Grants +10 Strength for 5 minutes\",uber:1b,uberColor:69fa52a9}}",
+                    "the_vault:pylon{Config:{type:effect,effect:regeneration,amplifier:2,duration:6000,color:69ff42ec,description:\"Grants +2 Regeneration for 5 minutes\",uber:1b,uberColor:695fe80d}}",
+                    "the_vault:pylon{Config:{type:stat,stat:LUCKY_HIT_CHANCE,addend:0.50,duration:6000,color:696df5a3,description:\"+50% Lucky Hit Chance for 5 minutes\",uber:1b,uberColor:69fff705}}",
+                    "the_vault:pylon{Config:{type:stat,stat:SOUL_CHANCE,addend:1.0,duration:6000,color:696900cc,description:\"+100% Soul Shard Chance for 5 minutes\",uber:1b,uberColor:69f03232}}",
+                    "the_vault:pylon{Config:{type:stat,stat:COPIOUSLY,addend:0.3,duration:6000,color:69f74780,description:\"+30% Copiously Chance for 5 minutes\",uber:1b,uberColor:69ffffff}}",
+                    "the_vault:pylon{Config:{type:potion,charges:6,color:6900FF00,description:\"Recharges your potion fully\"},uber:1b,uberColor:69ffffff}}"
+                ),
+                obj -> obj instanceof String val && val.startsWith("the_vault:pylon{Config:") && val.endsWith("}"));
 
         Configuration.GENERAL_SPEC = builder.build();
     }
@@ -173,11 +210,43 @@ public class Configuration
     }
 
 
+    public List<? extends PylonBuff.Config> getPylonEffects()
+    {
+        return toPylonBuff(this.pylonEffects.get());
+    }
+
+
     private static List<ResourceLocation> toResourceLocation(List<? extends String> list)
     {
         return list.stream().
             map(ResourceLocation::tryParse).
             filter(value -> VaultModifierRegistry.getOpt(value).isPresent()).
+            toList();
+    }
+
+
+    /**
+     * This method transforms all input strings as pylon config buffs.
+     * @param list List of strings that need to be converted
+     * @return List of pylon buff configs.
+     */
+    private static List<? extends PylonBuff.Config> toPylonBuff(List<? extends String> list)
+    {
+        return list.stream().
+            map(text ->
+            {
+                try
+                {
+                    return TagParser.parseTag(text.substring(23, text.length() - 1));
+                }
+                catch (CommandSyntaxException ignored)
+                {
+                    return null;
+                }
+            }).
+            filter(Objects::nonNull).
+            map(PylonBuff.Config::fromNBT).
+            filter(Objects::nonNull).
             toList();
     }
 
@@ -211,6 +280,11 @@ public class Configuration
      * The config value for listing protected modifiers
      */
     private final ForgeConfigSpec.ConfigValue<List<? extends String>> protectedModifiers;
+
+    /**
+     * The config value for listing pylon effects
+     */
+    private final ForgeConfigSpec.ConfigValue<List<? extends String>> pylonEffects;
 
     /**
      * The general config spec.

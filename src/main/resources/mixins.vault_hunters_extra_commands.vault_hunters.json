@@ -1,0 +1,12 @@
+{
+  "package": "lv.id.bonne.vaulthunters.extracommands.mixin",
+  "refmap": "mixins.vault_hunters_extra_commands.refmap.json",
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_17",
+  "required": true,
+  "mixins": [
+    "MixinListener",
+    "MixinVirtualWorlds"
+  ],
+  "client": []
+}

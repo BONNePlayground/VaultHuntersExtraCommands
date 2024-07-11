@@ -14,6 +14,7 @@ import iskallia.vault.core.vault.Vault;
 import iskallia.vault.core.vault.time.TickClock;
 import iskallia.vault.world.data.ServerVaults;
 import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
+import lv.id.bonne.vaulthunters.extracommands.data.ExtraCommandsData;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -60,14 +61,30 @@ public class VaultTimerCommand
             {
                 ExtraCommands.LOGGER.info("Vault timer resumed!");
                 tickClock.remove(TickClock.PAUSED);
+
+                ExtraCommandsData extraCommandsData = ExtraCommandsData.get(level);
+
+                if (extraCommandsData != null)
+                {
+                    extraCommandsData.paused.remove(level.dimension().location());
+                    extraCommandsData.setDirty();
+                }
             }
             else
             {
                 ExtraCommands.LOGGER.info("Vault timer paused!");
                 tickClock.set(TickClock.PAUSED);
+
+                ExtraCommandsData extraCommandsData = ExtraCommandsData.get(level);
+
+                if (extraCommandsData != null)
+                {
+                    extraCommandsData.paused.put(level.dimension().location(), true);
+                    extraCommandsData.setDirty();
+                }
             }
         },
-        () -> ExtraCommands.LOGGER.warn("Dimension does not have registred vault!"));
+        () -> ExtraCommands.LOGGER.warn("Dimension does not have registered vault!"));
 
         return 1;
     }

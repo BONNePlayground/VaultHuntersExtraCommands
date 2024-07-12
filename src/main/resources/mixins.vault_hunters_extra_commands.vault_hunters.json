@@ -5,9 +5,18 @@
   "compatibilityLevel": "JAVA_17",
   "required": true,
   "mixins": [
+    "DiscoveredAlchemyEffectsDataAccessor",
+    "DiscoveredWorkbenchModifiersDataAccessor",
+    "DiscoveryGoalStatesDataAccessor",
     "GodAltarDataAccessor",
     "MixinListener",
     "MixinVirtualWorlds",
+    "ParadoxCrystalDataAccessor",
+    "PlayerGreedDataAccessor",
+    "PlayerProficiencyDataAccessor",
+    "PlayerReputationDataAccessor",
+    "PlayerSpiritRecoveryDataAccessor",
+    "PlayerStatsDataAccessor",
     "ProgressConfiguredTaskAccessor"
   ],
   "client": []

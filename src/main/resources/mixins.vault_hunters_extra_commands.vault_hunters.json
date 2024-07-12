@@ -5,8 +5,10 @@
   "compatibilityLevel": "JAVA_17",
   "required": true,
   "mixins": [
+    "GodAltarDataAccessor",
     "MixinListener",
-    "MixinVirtualWorlds"
+    "MixinVirtualWorlds",
+    "ProgressConfiguredTaskAccessor"
   ],
   "client": []
 }

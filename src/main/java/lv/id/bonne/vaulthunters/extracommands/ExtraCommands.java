@@ -3,10 +3,7 @@ package lv.id.bonne.vaulthunters.extracommands;
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 
-import lv.id.bonne.vaulthunters.extracommands.commands.BountyCompleteCommand;
-import lv.id.bonne.vaulthunters.extracommands.commands.ModifiersCommand;
-import lv.id.bonne.vaulthunters.extracommands.commands.VaultPylonCommand;
-import lv.id.bonne.vaulthunters.extracommands.commands.VaultTimerCommand;
+import lv.id.bonne.vaulthunters.extracommands.commands.*;
 import lv.id.bonne.vaulthunters.extracommands.configs.Configuration;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -48,6 +45,7 @@ public class ExtraCommands
             VaultTimerCommand.register(event.getDispatcher());
             BountyCompleteCommand.register(event.getDispatcher());
             VaultPylonCommand.register(event.getDispatcher());
+            AltarCompleteCommand.register(event.getDispatcher());
         }
     }
 

@@ -9,6 +9,7 @@
     "DiscoveredWorkbenchModifiersDataAccessor",
     "DiscoveryGoalStatesDataAccessor",
     "GodAltarDataAccessor",
+    "MixinClassicListenersLogic",
     "MixinListener",
     "MixinVirtualWorlds",
     "ParadoxCrystalDataAccessor",

@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.function.Function;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -24,6 +25,8 @@ public class ExtraCommandsData extends SavedData
     protected static final String DATA_NAME = "extra_commands_data";
 
     public Map<ResourceLocation, Boolean> paused = new HashMap<>();
+
+    public Map<UUID, Integer> time = new HashMap<>();
 
     public ExtraCommandsData()
     {
@@ -41,6 +44,7 @@ public class ExtraCommandsData extends SavedData
     public CompoundTag save(CompoundTag tag)
     {
         tag.put("pausedVaults", serializePaused());
+        tag.put("playerData", serializePlayerData());
         return tag;
     }
 
@@ -88,6 +92,16 @@ public class ExtraCommandsData extends SavedData
                 });
             }
 
+            ListTag playerList = tag.getList("playerData", 10);
+
+            playerList.forEach(dataTag ->
+            {
+                if (dataTag instanceof CompoundTag entry)
+                {
+                    data.time.put(entry.getUUID("uuid"), entry.getInt("time"));
+                }
+            });
+
             return data;
         };
     }
@@ -98,5 +112,19 @@ public class ExtraCommandsData extends SavedData
         CompoundTag tag = new CompoundTag();
         this.paused.forEach(((key, value) -> tag.putBoolean(key.toString(), value)));
         return tag;
+    }
+
+
+    private ListTag serializePlayerData()
+    {
+        ListTag returnList = new ListTag();
+
+        this.time.forEach((uuid, count) -> {
+            CompoundTag entry = new CompoundTag();
+            entry.putUUID("uuid", uuid);
+            entry.putInt("time", count);
+            returnList.add(entry);
+        });
+        return returnList;
     }
 }

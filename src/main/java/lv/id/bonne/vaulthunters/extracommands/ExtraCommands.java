@@ -49,6 +49,7 @@ public class ExtraCommands
             VaultAltarCompleteCommand.register(event.getDispatcher());
             ClearCommand.register(event.getDispatcher());
             KickCommand.register(event.getDispatcher());
+            VaultPermanentTimeCommand.register(event.getDispatcher());
         }
     }
 

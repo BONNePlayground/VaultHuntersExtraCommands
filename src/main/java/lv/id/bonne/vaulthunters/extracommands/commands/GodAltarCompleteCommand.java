@@ -20,6 +20,7 @@ import iskallia.vault.task.Task;
 import iskallia.vault.task.source.EntityTaskSource;
 import iskallia.vault.task.source.TaskSource;
 import iskallia.vault.world.data.GodAltarData;
+import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
 import lv.id.bonne.vaulthunters.extracommands.mixin.GodAltarDataAccessor;
 import lv.id.bonne.vaulthunters.extracommands.mixin.ProgressConfiguredTaskAccessor;
 import net.minecraft.commands.CommandSourceStack;
@@ -39,6 +40,7 @@ public class GodAltarCompleteCommand
     {
         LiteralArgumentBuilder<CommandSourceStack> baseLiteral = Commands.literal("the_vault_extra").
             requires(stack -> stack.hasPermission(1));
+        LiteralArgumentBuilder<CommandSourceStack> vaultLiteral = Commands.literal("vault");
         LiteralArgumentBuilder<CommandSourceStack> mainLiteral = Commands.literal("godAltar");
 
         LiteralArgumentBuilder<CommandSourceStack> complete = Commands.literal("complete").
@@ -50,7 +52,7 @@ public class GodAltarCompleteCommand
             then(Commands.argument("player", EntityArgument.players()).
                 executes(ctx -> completeGodAltar(EntityArgument.getPlayer(ctx, "player"), false)));
 
-        dispatcher.register(baseLiteral.then(mainLiteral.then(complete).then(fail)));
+        dispatcher.register(baseLiteral.then(vaultLiteral.then(mainLiteral.then(complete).then(fail))));
     }
 
 
@@ -89,11 +91,13 @@ public class GodAltarCompleteCommand
                             if (!complete && delegate instanceof FailGodAltarTask fail)
                             {
                                 fail.onStop(var4);
+                                ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " failed God Altar!");
                             }
                             else if (complete && delegate instanceof ProgressConfiguredTask progressTask)
                             {
                                 ProgressConfiguredTaskAccessor accessor = (ProgressConfiguredTaskAccessor) progressTask;
                                 accessor.setCurrentCount(accessor.getTargetCount());
+                                ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " completed God Altar!");
                             }
                         }
                     }

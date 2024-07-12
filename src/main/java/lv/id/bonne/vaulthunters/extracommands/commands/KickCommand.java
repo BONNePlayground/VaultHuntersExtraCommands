@@ -10,8 +10,6 @@ package lv.id.bonne.vaulthunters.extracommands.commands;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import java.util.Iterator;
-import java.util.UUID;
 
 import iskallia.vault.core.vault.Vault;
 import iskallia.vault.core.vault.player.Completion;

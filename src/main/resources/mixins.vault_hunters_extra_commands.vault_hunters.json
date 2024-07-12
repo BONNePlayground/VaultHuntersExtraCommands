@@ -18,7 +18,8 @@
     "PlayerReputationDataAccessor",
     "PlayerSpiritRecoveryDataAccessor",
     "PlayerStatsDataAccessor",
-    "ProgressConfiguredTaskAccessor"
+    "ProgressConfiguredTaskAccessor",
+    "VaultAltarTileEntityAccessor"
   ],
   "client": []
 }

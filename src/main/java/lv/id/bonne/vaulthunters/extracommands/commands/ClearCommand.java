@@ -13,22 +13,18 @@ import java.util.*;
 
 import iskallia.vault.block.entity.VaultAltarTileEntity;
 import iskallia.vault.core.vault.Vault;
-import iskallia.vault.core.vault.stat.StatsCollector;
 import iskallia.vault.core.vault.stat.VaultSnapshot;
-import iskallia.vault.discoverylogic.DiscoveryGoalsState;
-import iskallia.vault.entity.eternal.EternalData;
 import iskallia.vault.init.ModNetwork;
-import iskallia.vault.nbt.VMapNBT;
 import iskallia.vault.network.message.UpdateTitlesDataMessage;
 import iskallia.vault.world.data.*;
+import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
 import lv.id.bonne.vaulthunters.extracommands.mixin.*;
+import lv.id.bonne.vaulthunters.extracommands.util.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.Item;
 import net.minecraftforge.network.NetworkDirection;
 
 
@@ -110,6 +106,9 @@ public class ClearCommand
 
         // Reset skill altar data
         resetSkillAltarData(player);
+
+        ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " player data completely cleared!");
+        Util.sendGodMessageToPlayer(player, "You have been punished! Now you must return to the start!");
 
         return 1;
     }

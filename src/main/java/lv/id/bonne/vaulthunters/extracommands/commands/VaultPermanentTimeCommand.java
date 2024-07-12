@@ -12,6 +12,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
 import lv.id.bonne.vaulthunters.extracommands.data.ExtraCommandsData;
+import lv.id.bonne.vaulthunters.extracommands.util.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -69,8 +70,20 @@ public class VaultPermanentTimeCommand
                     value != null ? value + seconds : seconds);
             }
 
-            extraCommandsData.setDirty();
+            int extraSeconds = extraCommandsData.time.get(player.getUUID());
 
+            if (extraSeconds < 0)
+            {
+                Util.sendGodMessageToPlayer(player,
+                    "You have been punished! I remove " + (-extraSeconds)  + " seconds from your Vault!");
+            }
+            else
+            {
+                Util.sendGodMessageToPlayer(player,
+                    "You have been blessed with extra " + extraSeconds  + " seconds in the Vault!");
+            }
+
+            extraCommandsData.setDirty();
         }
 
         return 1;

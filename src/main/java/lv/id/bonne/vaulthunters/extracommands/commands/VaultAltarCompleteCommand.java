@@ -9,23 +9,14 @@ package lv.id.bonne.vaulthunters.extracommands.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 import iskallia.vault.altar.AltarInfusionRecipe;
+import iskallia.vault.altar.RequiredItems;
 import iskallia.vault.block.entity.VaultAltarTileEntity;
-import iskallia.vault.task.FailGodAltarTask;
-import iskallia.vault.task.NodeTask;
-import iskallia.vault.task.ProgressConfiguredTask;
-import iskallia.vault.task.Task;
-import iskallia.vault.task.source.EntityTaskSource;
-import iskallia.vault.task.source.TaskSource;
-import iskallia.vault.world.data.GodAltarData;
 import iskallia.vault.world.data.PlayerVaultAltarData;
-import lv.id.bonne.vaulthunters.extracommands.mixin.GodAltarDataAccessor;
-import lv.id.bonne.vaulthunters.extracommands.mixin.ProgressConfiguredTaskAccessor;
+import lv.id.bonne.vaulthunters.extracommands.mixin.VaultAltarTileEntityAccessor;
+import lv.id.bonne.vaulthunters.extracommands.util.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -65,19 +56,26 @@ public class VaultAltarCompleteCommand
         PlayerVaultAltarData data = PlayerVaultAltarData.get(player.getLevel());
 
         AltarInfusionRecipe recipe = data.getRecipe(player);
-        recipe.getIncompleteRequiredItems().forEach(item ->
-            item.setCurrentAmount(item.getAmountRequired()));
 
-        List<BlockPos> altars = data.getAltars(player.getUUID());
+        List<RequiredItems> incompleteRequiredItems = recipe.getIncompleteRequiredItems();
 
-        altars.stream()
-            .filter(pos -> player.getLevel().isLoaded(pos))
-            .map(pos -> player.getLevel().getBlockEntity(pos))
-            .filter(te -> te instanceof VaultAltarTileEntity)
-            .map(te -> (VaultAltarTileEntity)te)
-            .forEach(VaultAltarTileEntity::sendUpdates);
+        if (!incompleteRequiredItems.isEmpty())
+        {
+            incompleteRequiredItems.forEach(item -> item.setCurrentAmount(item.getAmountRequired()));
 
-        data.setDirty();
+            List<BlockPos> altars = data.getAltars(player.getUUID());
+
+            altars.stream().
+                filter(pos -> player.getLevel().isLoaded(pos)).
+                map(pos -> player.getLevel().getBlockEntity(pos)).
+                filter(te -> te instanceof VaultAltarTileEntity).
+                map(te -> (VaultAltarTileEntity) te).
+                forEach(VaultAltarTileEntity::sendUpdates);
+
+            data.setDirty();
+
+            Util.sendGodMessageToPlayer(player, "I finished your crystal recipe! Waiting you in the vault!");
+        }
 
         return 1;
     }

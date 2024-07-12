@@ -45,7 +45,8 @@ public class ExtraCommands
             VaultTimerCommand.register(event.getDispatcher());
             BountyCompleteCommand.register(event.getDispatcher());
             VaultPylonCommand.register(event.getDispatcher());
-            AltarCompleteCommand.register(event.getDispatcher());
+            GodAltarCompleteCommand.register(event.getDispatcher());
+            VaultAltarCompleteCommand.register(event.getDispatcher());
         }
     }
 

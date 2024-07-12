@@ -28,7 +28,7 @@ import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.server.level.ServerPlayer;
 
 
-public class AltarCompleteCommand
+public class GodAltarCompleteCommand
 {
     /**
      * Registers the command that toggles a pause for the vault.

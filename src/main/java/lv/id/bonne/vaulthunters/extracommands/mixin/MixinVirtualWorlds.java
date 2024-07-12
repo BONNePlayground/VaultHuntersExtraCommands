@@ -27,7 +27,7 @@ public class MixinVirtualWorlds
 
         if (data != null)
         {
-            if (data.paused.remove(world.dimension().location()))
+            if (data.paused.remove(world.dimension().location()) != null)
             {
                 data.setDirty();
             }

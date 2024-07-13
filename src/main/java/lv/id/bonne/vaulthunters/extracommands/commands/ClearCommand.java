@@ -60,9 +60,7 @@ public class ClearCommand
         removeVaultAltarData(player);
         removeVaultStatsData(player);
 
-        PlayerVaultStatsData.get(player.getLevel()).resetLevelAbilitiesAndExpertise(player);
-        PlayerResearchesData.get(player.getLevel()).resetResearchTree(player);
-        PlayerVaultStatsData.get(player.getLevel()).resetKnowledge(player);
+        properlyResetSkills(player);
 
         // Remove quests
         QuestStatesData.get().getState(player).reset();
@@ -337,6 +335,28 @@ public class ClearCommand
             skillAltarData.getSkillTemplates(player.getUUID()).clear();
             skillAltarData.syncTo(player);
             skillAltarData.setDirty();
+        }
+    }
+
+
+    private static void properlyResetSkills(ServerPlayer player)
+    {
+        PlayerVaultStatsData statsData = PlayerVaultStatsData.get(player.getLevel());
+        PlayerResearchesData researchesData = PlayerResearchesData.get(player.getLevel());
+
+        statsData.resetLevelAbilitiesAndExpertise(player);
+        researchesData.resetResearchTree(player);
+        statsData.resetKnowledge(player);
+
+        // Remove player entry completely.
+        if (((PlayerVaultStatsDataAccessor) statsData).getPlayerMap().remove(player.getUUID()) != null)
+        {
+            statsData.setDirty();
+        }
+
+        if (((PlayerResearchesDataAccessor) researchesData).getPlayerMap().remove(player.getUUID()) != null)
+        {
+            researchesData.setDirty();
         }
     }
 }

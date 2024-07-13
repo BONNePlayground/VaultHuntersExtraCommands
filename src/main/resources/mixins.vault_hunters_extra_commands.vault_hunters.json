@@ -17,8 +17,10 @@
     "PlayerGreedDataAccessor",
     "PlayerProficiencyDataAccessor",
     "PlayerReputationDataAccessor",
+    "PlayerResearchesDataAccessor",
     "PlayerSpiritRecoveryDataAccessor",
     "PlayerStatsDataAccessor",
+    "PlayerVaultStatsDataAccessor",
     "ProgressConfiguredTaskAccessor",
     "VaultAltarTileEntityAccessor"
   ],

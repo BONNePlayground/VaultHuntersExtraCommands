@@ -34,7 +34,7 @@ public class MixinListener
         ResourceKey<Level> dimension = world.dimension();
 
         if (extraCommandsData != null &&
-            extraCommandsData.paused.getOrDefault(dimension.location(), false))
+            extraCommandsData.paused.containsKey(dimension.location()))
         {
             cir.setReturnValue(false);
         }

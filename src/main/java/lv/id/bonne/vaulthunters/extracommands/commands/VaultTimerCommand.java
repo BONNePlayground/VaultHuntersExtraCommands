@@ -8,6 +8,7 @@ package lv.id.bonne.vaulthunters.extracommands.commands;
 
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
 import iskallia.vault.core.vault.Vault;
@@ -39,9 +40,12 @@ public class VaultTimerCommand
         LiteralArgumentBuilder<CommandSourceStack> vaultLiteral = Commands.literal("vault");
 
         LiteralArgumentBuilder<CommandSourceStack> togglePause = Commands.literal("togglePause").
-            executes(ctx -> togglePause(ctx.getSource().getPlayerOrException().getLevel())).
+            executes(ctx -> togglePause(ctx.getSource().getPlayerOrException().getLevel(), false)).
             then(Commands.argument("player", EntityArgument.players()).
-                executes(ctx -> togglePause(EntityArgument.getPlayer(ctx, "player").getLevel())));
+                executes(ctx -> togglePause(EntityArgument.getPlayer(ctx, "player").getLevel(), false)).
+                then(Commands.argument("complete", BoolArgumentType.bool()).
+                    executes(ctx -> togglePause(EntityArgument.getPlayer(ctx, "player").getLevel(),
+                        BoolArgumentType.getBool(ctx, "complete")))));
 
         dispatcher.register(baseLiteral.then(vaultLiteral.then(togglePause)));
     }
@@ -52,7 +56,7 @@ public class VaultTimerCommand
      * @param level Level which vault needs to be paused.
      * @return 1
      */
-    private static int togglePause(ServerLevel level)
+    private static int togglePause(ServerLevel level, boolean tickStop)
     {
         ServerVaults.get(level).ifPresentOrElse(vault ->
         {
@@ -83,7 +87,7 @@ public class VaultTimerCommand
 
                 if (extraCommandsData != null)
                 {
-                    extraCommandsData.paused.put(level.dimension().location(), true);
+                    extraCommandsData.paused.put(level.dimension().location(), tickStop);
                     extraCommandsData.setDirty();
                 }
 

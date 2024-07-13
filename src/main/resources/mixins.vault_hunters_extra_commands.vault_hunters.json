@@ -11,6 +11,7 @@
     "GodAltarDataAccessor",
     "MixinClassicListenersLogic",
     "MixinListener",
+    "MixinVirtualWorld",
     "MixinVirtualWorlds",
     "ParadoxCrystalDataAccessor",
     "PlayerGreedDataAccessor",

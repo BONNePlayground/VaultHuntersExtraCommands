@@ -62,7 +62,7 @@ public class ExtraCommandsData extends SavedData
         {
             return serverLevel.getServer().overworld().getDataStorage().computeIfAbsent(ExtraCommandsData.load(serverLevel),
                 ExtraCommandsData::new,
-                "extra_commands_data");
+                DATA_NAME);
         }
 
         return null;

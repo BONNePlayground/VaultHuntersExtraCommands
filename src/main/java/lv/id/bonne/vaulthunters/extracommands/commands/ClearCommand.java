@@ -16,6 +16,7 @@ import iskallia.vault.core.vault.Vault;
 import iskallia.vault.core.vault.stat.VaultSnapshot;
 import iskallia.vault.init.ModNetwork;
 import iskallia.vault.network.message.UpdateTitlesDataMessage;
+import iskallia.vault.skill.PlayerVaultStats;
 import iskallia.vault.world.data.*;
 import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
 import lv.id.bonne.vaulthunters.extracommands.mixin.*;
@@ -26,6 +27,7 @@ import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkDirection;
+import net.minecraftforge.network.PacketDistributor;
 
 
 public class ClearCommand
@@ -290,11 +292,11 @@ public class ClearCommand
 
         if (titlesData.entries.remove(player.getUUID()) != null)
         {
-            ModNetwork.CHANNEL.sendTo(new UpdateTitlesDataMessage(titlesData.entries),
-                player.connection.connection,
-                NetworkDirection.PLAY_TO_CLIENT);
+            ModNetwork.CHANNEL.send(PacketDistributor.ALL.noArg(), new UpdateTitlesDataMessage(titlesData.entries));
             titlesData.setDirty();
         }
+
+        player.refreshTabListName();
     }
 
 
@@ -351,11 +353,14 @@ public class ClearCommand
         // Remove player entry completely.
         if (((PlayerVaultStatsDataAccessor) statsData).getPlayerMap().remove(player.getUUID()) != null)
         {
+            // Sync empty data with server
+            new PlayerVaultStats(player.getUUID()).sync(player.getLevel().getServer());
             statsData.setDirty();
         }
 
         if (((PlayerResearchesDataAccessor) researchesData).getPlayerMap().remove(player.getUUID()) != null)
         {
+            new PlayerResearchesData().sync(player);
             researchesData.setDirty();
         }
     }

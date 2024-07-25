@@ -35,7 +35,7 @@ public class MixinClassicListenersLogic
 
         if (extraCommandsData != null && extraCommandsData.time.containsKey(listener.get(Listener.ID)))
         {
-            int extraTicks = extraCommandsData.time.get(listener.get(Listener.ID)) * 20;
+            int extraTicks = extraCommandsData.time.getOrDefault(listener.get(Listener.ID), 0) * 20;
 
             vault.ifPresent(Vault.CLOCK, clock ->
                 clock.setIfPresent(TickClock.DISPLAY_TIME,

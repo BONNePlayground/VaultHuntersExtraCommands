@@ -82,6 +82,8 @@ public class ModelUnlockCommand
         LiteralArgumentBuilder<CommandSourceStack> baseLiteral = Commands.literal("the_vault_extra").
             requires(stack -> stack.hasPermission(1));
 
+        LiteralArgumentBuilder<CommandSourceStack> discovery = Commands.literal("discovery");
+
         LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("model").
             then(Commands.argument("player", EntityArgument.players()).
                 then(Commands.argument("item", EnumArgument.enumArgument(Item.class)).
@@ -94,7 +96,7 @@ public class ModelUnlockCommand
                 )
             );
 
-        dispatcher.register(baseLiteral.then(command));
+        dispatcher.register(baseLiteral.then(discovery.then(command)));
     }
 
 

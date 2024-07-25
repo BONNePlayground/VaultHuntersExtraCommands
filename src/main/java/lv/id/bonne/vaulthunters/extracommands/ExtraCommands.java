@@ -52,6 +52,7 @@ public class ExtraCommands
             VaultPermanentTimeCommand.register(event.getDispatcher());
             ProficiencyCommand.register(event.getDispatcher());
             ModelUnlockCommand.register(event.getDispatcher());
+            TrinketUnlockCommand.register(event.getDispatcher());
         }
     }
 

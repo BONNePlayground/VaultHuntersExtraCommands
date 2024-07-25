@@ -115,7 +115,8 @@ public class ModelUnlockCommand
                 new TextComponent("Ups, I dropped something! Looks like you picked up ").
                     append((new TextComponent(resourceLocation.toString())).
                         setStyle(Style.EMPTY.withColor(ChatFormatting.GREEN))).
-                    append(" model for " + item.name().toLowerCase() + "!"));
+                    append(" model for " + item.name().toLowerCase() + "!").
+                    withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
             ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " unlocked " +
                 resourceLocation + " for " + item.name());
         }

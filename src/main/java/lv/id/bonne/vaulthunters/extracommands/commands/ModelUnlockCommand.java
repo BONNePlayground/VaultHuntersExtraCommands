@@ -16,8 +16,11 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import java.util.*;
 
 import iskallia.vault.dynamodel.registry.DynamicModelRegistry;
+import iskallia.vault.gear.VaultGearRarity;
+import iskallia.vault.init.ModConfigs;
 import iskallia.vault.init.ModDynamicModels;
 import iskallia.vault.init.ModItems;
+import iskallia.vault.util.MiscUtils;
 import iskallia.vault.world.data.DiscoveredModelsData;
 import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
 import lv.id.bonne.vaulthunters.extracommands.util.Util;
@@ -27,10 +30,13 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.server.command.EnumArgument;
 
 
@@ -110,15 +116,17 @@ public class ModelUnlockCommand
         DiscoveredModelsData modelsData = DiscoveredModelsData.get(player.server);
         if (modelsData.discoverModel(player.getUUID(), resourceLocation))
         {
-            modelsData.setDirty(true);
             modelsData.syncTo(player);
 
-            Util.sendGodMessageToPlayer(player,
-                new TextComponent("Ups, I dropped something! Looks like you picked up ").
-                    append((new TextComponent(resourceLocation.toString())).
-                        setStyle(Style.EMPTY.withColor(ChatFormatting.GREEN))).
-                    append(" model for " + item.name().toLowerCase() + "!").
-                    withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
+            ModDynamicModels.REGISTRIES.getModelAndAssociatedItem(resourceLocation).ifPresent(
+                itemPair -> Util.sendGodMessageToPlayer(player,
+                    new TextComponent("Ups, I dropped something! Looks like you picked up ").
+                        append((new TextComponent(itemPair.getFirst().getDisplayName())).
+                            setStyle(Style.EMPTY.withColor(ChatFormatting.GREEN))).
+                        append(" model for " + item.name().toLowerCase() + "!").
+                        withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)))
+            );
+
             ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " unlocked " +
                 resourceLocation + " for " + item.name());
         }

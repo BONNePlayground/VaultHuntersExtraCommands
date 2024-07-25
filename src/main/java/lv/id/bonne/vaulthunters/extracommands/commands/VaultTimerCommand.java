@@ -8,11 +8,13 @@ package lv.id.bonne.vaulthunters.extracommands.commands;
 
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.BoolArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
 import iskallia.vault.core.vault.Vault;
+import iskallia.vault.core.vault.influence.VaultGod;
 import iskallia.vault.core.vault.time.TickClock;
+import iskallia.vault.core.vault.time.modifier.PylonExtension;
 import iskallia.vault.world.data.ServerVaults;
 import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
 import lv.id.bonne.vaulthunters.extracommands.data.ExtraCommandsData;
@@ -21,6 +23,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 
 
 /**
@@ -40,14 +43,28 @@ public class VaultTimerCommand
         LiteralArgumentBuilder<CommandSourceStack> vaultLiteral = Commands.literal("vault");
 
         LiteralArgumentBuilder<CommandSourceStack> togglePause = Commands.literal("pause").
+            executes(ctx -> togglePause(ctx.getSource().getPlayerOrException().getLevel(), true)).
+            then(Commands.argument("player", EntityArgument.players()).
+                executes(ctx -> togglePause(EntityArgument.getPlayer(ctx, "player").getLevel(), true)));
+
+        LiteralArgumentBuilder<CommandSourceStack> timeLiteral = Commands.literal("time");
+
+        LiteralArgumentBuilder<CommandSourceStack> addTime = Commands.literal("increase").
+            then(Commands.argument("player", EntityArgument.players()).
+                then(Commands.argument("seconds", IntegerArgumentType.integer(1)).
+                    executes(ctx -> addVaultTime(EntityArgument.getPlayer(ctx, "player"), IntegerArgumentType.getInteger(ctx, "seconds")))));
+
+        LiteralArgumentBuilder<CommandSourceStack> removeTime = Commands.literal("reduce").
+            then(Commands.argument("player", EntityArgument.players()).
+                then(Commands.argument("seconds", IntegerArgumentType.integer(1)).
+                    executes(ctx -> addVaultTime(EntityArgument.getPlayer(ctx, "player"), -IntegerArgumentType.getInteger(ctx, "seconds")))));
+
+        LiteralArgumentBuilder<CommandSourceStack> stop = Commands.literal("stop").
             executes(ctx -> togglePause(ctx.getSource().getPlayerOrException().getLevel(), false)).
             then(Commands.argument("player", EntityArgument.players()).
-                executes(ctx -> togglePause(EntityArgument.getPlayer(ctx, "player").getLevel(), false)).
-                then(Commands.argument("complete", BoolArgumentType.bool()).
-                    executes(ctx -> togglePause(EntityArgument.getPlayer(ctx, "player").getLevel(),
-                        BoolArgumentType.getBool(ctx, "complete")))));
+                executes(ctx -> togglePause(EntityArgument.getPlayer(ctx, "player").getLevel(), false)));
 
-        dispatcher.register(baseLiteral.then(vaultLiteral.then(togglePause)));
+        dispatcher.register(baseLiteral.then(vaultLiteral.then(togglePause).then(timeLiteral.then(addTime).then(removeTime).then(stop))));
     }
 
 
@@ -96,6 +113,30 @@ public class VaultTimerCommand
             }
         },
         () -> ExtraCommands.LOGGER.warn("Dimension does not have registered vault!"));
+
+        return 1;
+    }
+
+
+    private static int addVaultTime(ServerPlayer player, int seconds)
+    {
+        ServerLevel level = player.getLevel();
+
+        ServerVaults.get(level).ifPresentOrElse(vault ->
+            {
+                TickClock tickClock = vault.get(Vault.CLOCK);
+                tickClock.addModifier(new PylonExtension(player, seconds * 20));
+
+                if (seconds > 0)
+                {
+                    Util.sendGodMessageToAll(level, "You have been blessed with extra " + seconds + " seconds in the Vault!");
+                }
+                else
+                {
+                    Util.sendGodMessageToAll(level, "You have been punished! I removed " + (-seconds) + " seconds from your Vault!", VaultGod.TENOS);
+                }
+            },
+            () -> ExtraCommands.LOGGER.warn("Dimension does not have registered vault!"));
 
         return 1;
     }

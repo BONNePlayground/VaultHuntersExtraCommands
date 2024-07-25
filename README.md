@@ -59,5 +59,8 @@ Proficiency Commands:
 - `/the_vault_extra proficiency increase <player> <type> <amount>` - increases players proficiency in selected type.
 - `/the_vault_extra proficiency reduce <player> <type> <amount>` - reduces players proficiency in selected type.
 
-Reset Command:
-- `/the_vault_extra model <player> <item> <model>` - unlocks requested model for player. 
+Discoveries Unlock Command:
+- `/the_vault_extra discoveries model <player> <item> <model>` - unlocks requested model for player.
+- `/the_vault_extra discoveries trinket <player> <trinket>` - unlocks requested trinket for player. 
+- `/the_vault_extra discoveries alchemy <player> <effect>` - unlocks requested alchemy effect for player. 
+- `/the_vault_extra discoveries workbench <player> <item> <modifier>` - unlocks requested workbench modifier for player. 

@@ -10,7 +10,9 @@ package lv.id.bonne.vaulthunters.extracommands.commands;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
+import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
 import lv.id.bonne.vaulthunters.extracommands.data.ExtraCommandsData;
 import lv.id.bonne.vaulthunters.extracommands.util.Util;
 import net.minecraft.commands.CommandSourceStack;
@@ -45,8 +47,11 @@ public class VaultPermanentTimeCommand
                 then(Commands.argument("seconds", IntegerArgumentType.integer(0)).
                     executes(ctx -> storeSecondsData(EntityArgument.getPlayer(ctx, "player"),
                         -IntegerArgumentType.getInteger(ctx, "seconds")))));
+        LiteralArgumentBuilder<CommandSourceStack> get = Commands.literal("get").
+            then(Commands.argument("player", EntityArgument.players()).
+                executes(ctx -> getStoredData(ctx.getSource(), EntityArgument.getPlayer(ctx, "player"))));
 
-        dispatcher.register(baseLiteral.then(vaultTime.then(add).then(remove)));
+        dispatcher.register(baseLiteral.then(vaultTime.then(add).then(remove).then(get)));
     }
 
 
@@ -84,6 +89,42 @@ public class VaultPermanentTimeCommand
             }
 
             extraCommandsData.setDirty();
+        }
+
+        return 1;
+    }
+
+
+    private static int getStoredData(CommandSourceStack source, ServerPlayer player)
+    {
+        ExtraCommandsData extraCommandsData = ExtraCommandsData.get(player.getLevel());
+
+        if (extraCommandsData != null)
+        {
+            Integer value = extraCommandsData.time.getOrDefault(player.getUUID(), 0);
+            String message;
+
+            if (value > 0)
+            {
+                message = "Player " + player.getDisplayName().getString() + " has " + value + " seconds extra in each vault!";
+            }
+            else if (value < 0)
+            {
+                message = "Player " + player.getDisplayName().getString() + " has " + value + " seconds less in each vault!";
+            }
+            else
+            {
+                message = "Player " + player.getDisplayName().getString() + " does not have extra time in each vault!";
+            }
+
+            try
+            {
+                Util.sendGodMessageToPlayer(source.getPlayerOrException(), message);
+            }
+            catch (CommandSyntaxException e)
+            {
+                ExtraCommands.LOGGER.info(message);
+            }
         }
 
         return 1;

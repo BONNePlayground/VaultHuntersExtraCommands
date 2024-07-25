@@ -1,4 +1,4 @@
-<a href="https://www.curseforge.com/minecraft/mc-mods/vault-hunters-extra-game-commands"><img src="http://cf.way2muchnoise.eu/917565.svg" alt="CF"></a>
+<a href="https://www.curseforge.com/minecraft/mc-mods/vault-hunters-extra-game-commands"><img src="http://cf.way2muchnoise.eu/1062425.svg" alt="CF"></a>
 
 # Vault Hunters Extra Commands
 

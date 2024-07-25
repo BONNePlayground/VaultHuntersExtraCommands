@@ -53,6 +53,7 @@ public class ExtraCommands
             ProficiencyCommand.register(event.getDispatcher());
             ModelUnlockCommand.register(event.getDispatcher());
             TrinketUnlockCommand.register(event.getDispatcher());
+            AlchemyUnlockCommand.register(event.getDispatcher());
         }
     }
 

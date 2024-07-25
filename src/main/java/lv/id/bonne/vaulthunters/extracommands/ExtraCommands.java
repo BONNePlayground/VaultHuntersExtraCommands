@@ -50,6 +50,7 @@ public class ExtraCommands
             ClearCommand.register(event.getDispatcher());
             KickCommand.register(event.getDispatcher());
             VaultPermanentTimeCommand.register(event.getDispatcher());
+            ProficiencyCommand.register(event.getDispatcher());
         }
     }
 

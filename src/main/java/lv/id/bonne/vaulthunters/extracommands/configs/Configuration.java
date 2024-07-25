@@ -3,11 +3,12 @@ package lv.id.bonne.vaulthunters.extracommands.configs;
 
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import iskallia.vault.core.vault.modifier.registry.VaultModifierRegistry;
 import iskallia.vault.core.vault.pylon.PylonBuff;
+import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -176,6 +177,14 @@ public class Configuration
                 ),
                 obj -> obj instanceof String val && val.startsWith("the_vault:pylon{Config:") && val.endsWith("}"));
 
+        builder.push("Command Section");
+
+        this.pauseAblePlayers =
+            builder.comment("List of UUID's that can run `/pause` command in the vault that tick-freezes it.").
+               defineList("pauseUUID", Collections.emptyList(), o -> o instanceof String);
+
+        builder.pop();
+
         Configuration.GENERAL_SPEC = builder.build();
     }
 
@@ -209,10 +218,42 @@ public class Configuration
         return toResourceLocation(this.protectedModifiers.get());
     }
 
+    public Set<UUID> getPlayersWithPausePermission()
+    {
+        return this.pauseAblePlayers.get().stream().map(UUID::fromString).collect(Collectors.toUnmodifiableSet());
+    }
 
     public List<? extends PylonBuff.Config> getPylonEffects()
     {
         return toPylonBuff(this.pylonEffects.get());
+    }
+
+
+    public void addPlayerToPauseList(UUID uuid)
+    {
+        Set<UUID> playerSet = this.getPlayersWithPausePermission();
+
+        if (!playerSet.contains(uuid))
+        {
+            List<UUID> playerList = new ArrayList<>(playerSet);
+            playerList.add(uuid);
+            this.pauseAblePlayers.set(playerList.stream().sorted().map(UUID::toString).collect(Collectors.toList()));
+            this.pauseAblePlayers.save();
+        }
+    }
+
+
+    public void removePlayerFromPauseList(UUID uuid)
+    {
+        Set<UUID> playerSet = this.getPlayersWithPausePermission();
+
+        if (playerSet.contains(uuid))
+        {
+            List<UUID> playerList = new ArrayList<>(playerSet);
+            playerList.remove(uuid);
+            this.pauseAblePlayers.set(playerList.stream().sorted().map(UUID::toString).toList());
+            this.pauseAblePlayers.save();
+        }
     }
 
 
@@ -285,6 +326,11 @@ public class Configuration
      * The config value for listing pylon effects
      */
     private final ForgeConfigSpec.ConfigValue<List<? extends String>> pylonEffects;
+
+    /**
+     * The config value for listing pylon effects
+     */
+    private final ForgeConfigSpec.ConfigValue<List<? extends String>> pauseAblePlayers;
 
     /**
      * The general config spec.

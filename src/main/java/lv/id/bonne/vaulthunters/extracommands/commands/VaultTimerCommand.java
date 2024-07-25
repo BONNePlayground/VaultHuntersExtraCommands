@@ -10,6 +10,7 @@ package lv.id.bonne.vaulthunters.extracommands.commands;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import iskallia.vault.core.vault.Vault;
 import iskallia.vault.core.vault.influence.VaultGod;
@@ -38,6 +39,34 @@ public class VaultTimerCommand
      */
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher)
     {
+        LiteralArgumentBuilder<CommandSourceStack> pause = Commands.literal("pause");
+        pause.requires(stack ->
+        {
+            try
+            {
+                return ExtraCommands.CONFIGURATION.getPlayersWithPausePermission().
+                    contains(stack.getPlayerOrException().getUUID()) ||
+                    stack.hasPermission(1);
+            }
+            catch (CommandSyntaxException e)
+            {
+                ExtraCommands.LOGGER.info("PAUSE can be run only as player.");
+                return false;
+            }
+        });
+        pause.executes(ctx -> togglePause(ctx.getSource().getLevel(), true));
+
+        LiteralArgumentBuilder<CommandSourceStack> pauseAdd = Commands.literal("add").
+            requires(stack -> stack.hasPermission(1)).
+            then(Commands.argument("player", EntityArgument.players()).
+                executes(ctx -> configPlayer(EntityArgument.getPlayer(ctx, "player"), true)));
+        LiteralArgumentBuilder<CommandSourceStack> pauseRemove = Commands.literal("remove").
+            requires(stack -> stack.hasPermission(1)).
+            then(Commands.argument("player", EntityArgument.players()).
+                executes(ctx -> configPlayer(EntityArgument.getPlayer(ctx, "player"), false)));
+
+        dispatcher.register(pause.then(pauseAdd).then(pauseRemove));
+
         LiteralArgumentBuilder<CommandSourceStack> baseLiteral = Commands.literal("the_vault_extra").
             requires(stack -> stack.hasPermission(1));
         LiteralArgumentBuilder<CommandSourceStack> vaultLiteral = Commands.literal("vault");
@@ -137,6 +166,23 @@ public class VaultTimerCommand
                 }
             },
             () -> ExtraCommands.LOGGER.warn("Dimension does not have registered vault!"));
+
+        return 1;
+    }
+
+
+    private static int configPlayer(ServerPlayer player, boolean add)
+    {
+        if (add)
+        {
+            ExtraCommands.CONFIGURATION.addPlayerToPauseList(player.getUUID());
+            ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " added to pause list.");
+        }
+        else
+        {
+            ExtraCommands.CONFIGURATION.removePlayerFromPauseList(player.getUUID());
+            ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " removed from pause list.");
+        }
 
         return 1;
     }

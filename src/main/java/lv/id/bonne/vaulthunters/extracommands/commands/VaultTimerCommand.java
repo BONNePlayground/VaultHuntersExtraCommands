@@ -39,7 +39,7 @@ public class VaultTimerCommand
             requires(stack -> stack.hasPermission(1));
         LiteralArgumentBuilder<CommandSourceStack> vaultLiteral = Commands.literal("vault");
 
-        LiteralArgumentBuilder<CommandSourceStack> togglePause = Commands.literal("togglePause").
+        LiteralArgumentBuilder<CommandSourceStack> togglePause = Commands.literal("pause").
             executes(ctx -> togglePause(ctx.getSource().getPlayerOrException().getLevel(), false)).
             then(Commands.argument("player", EntityArgument.players()).
                 executes(ctx -> togglePause(EntityArgument.getPlayer(ctx, "player").getLevel(), false)).

@@ -7,7 +7,10 @@
 package lv.id.bonne.vaulthunters.extracommands.commands;
 
 
+import com.google.common.base.Enums;
+import com.google.common.base.Optional;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import java.util.*;
 
@@ -26,12 +29,34 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.server.command.EnumArgument;
 
 
 public class ClearCommand
 {
+    private enum Mode
+    {
+        COMPLETE,
+        ALTAR,
+        STATS,
+        SKILLS,
+        QUESTS,
+        HISTORY,
+        BOUNTY,
+        DISCOVERIES,
+        ETERNALS,
+        PARADOX,
+        BLACK_MARKET,
+        GREED,
+        PROFICIENCY,
+        REPUTATION,
+        SPIRIT,
+        TITLES,
+        SKILL_ALTAR
+    }
+
+
     /**
      * Registers the command that toggles a pause for the vault.
      *
@@ -43,9 +68,12 @@ public class ClearCommand
             requires(stack -> stack.hasPermission(1));
 
         LiteralArgumentBuilder<CommandSourceStack> complete = Commands.literal("reset").
-            executes(ctx -> clearPlayerData(ctx.getSource().getPlayerOrException())).
+            executes(ctx -> clearPlayerData(ctx.getSource().getPlayerOrException(), Mode.COMPLETE.name())).
             then(Commands.argument("player", EntityArgument.players()).
-                executes(ctx -> clearPlayerData(EntityArgument.getPlayer(ctx, "player"))));
+                executes(ctx -> clearPlayerData(EntityArgument.getPlayer(ctx, "player"), Mode.COMPLETE.name())).
+                then(Commands.argument("mode", EnumArgument.enumArgument(Mode.class)).
+                    executes(ctx -> clearPlayerData(EntityArgument.getPlayer(ctx, "player"), StringArgumentType.getString(ctx, "mode"))))
+            );
 
         dispatcher.register(baseLiteral.then(complete));
     }
@@ -56,59 +84,86 @@ public class ClearCommand
      * @param player Player which bounty need to be completed.
      * @return 1
      */
-    private static int clearPlayerData(ServerPlayer player)
+    private static int clearPlayerData(ServerPlayer player, String mode)
     {
-        // Remove Vault Altar data
-        removeVaultAltarData(player);
-        removeVaultStatsData(player);
+        Optional<Mode> value = Enums.getIfPresent(Mode.class, mode.toUpperCase());
 
-        properlyResetSkills(player);
+        Mode clearMode;
 
-        // Remove quests
-        QuestStatesData.get().getState(player).reset();
+        if (value.isPresent())
+        {
+            clearMode = value.get();
+        }
+        else
+        {
+            clearMode = Mode.COMPLETE;
+        }
 
-        // Remove history
-        VaultDeathSnapshotData.get(player.getLevel()).removeSnapshots(player);
-        VaultJoinSnapshotData.get(player.getLevel()).removeSnapshots(player);
-        removeVaultHistory(player);
+        switch (clearMode)
+        {
+            case ALTAR -> removeVaultAltarData(player);
+            case STATS -> removeVaultStatsData(player);
+            case SKILLS -> properlyResetSkills(player);
+            case QUESTS -> QuestStatesData.get().getState(player).reset();
+            case HISTORY ->
+            {
+                VaultDeathSnapshotData.get(player.getLevel()).removeSnapshots(player);
+                VaultJoinSnapshotData.get(player.getLevel()).removeSnapshots(player);
+                removeVaultHistory(player);
+            }
+            case BOUNTY ->
+            {
+                // Remove bounty data
+                BountyData.get().getAllLegendaryFor(player.getUUID()).clear();
+                BountyData.get().resetAllBounties(player.getUUID());
+            }
+            case DISCOVERIES ->
+            {
+                // Reset discoveries
+                DiscoveredModelsData.get(player.getLevel()).reset(player.getUUID());
+                removeDiscoveries(player);
+            }
+            case ETERNALS -> removeEternals(player);
+            case PARADOX -> removeParadox(player);
+            case BLACK_MARKET -> removeBlackMarket(player);
+            case GREED -> resetGreedData(player);
+            case PROFICIENCY -> resetProficiencyData(player);
+            case REPUTATION -> resetReputationData(player);
+            case SPIRIT -> resetSpiritData(player);
+            case TITLES -> resetTitlesData(player);
+            case SKILL_ALTAR -> resetSkillAltarData(player);
+            default ->
+            {
+                removeVaultAltarData(player);
+                removeVaultStatsData(player);
+                properlyResetSkills(player);
+                QuestStatesData.get().getState(player).reset();
 
-        // Remove bounty data
-        BountyData.get().getAllLegendaryFor(player.getUUID()).clear();
-        BountyData.get().resetAllBounties(player.getUUID());
+                VaultDeathSnapshotData.get(player.getLevel()).removeSnapshots(player);
+                VaultJoinSnapshotData.get(player.getLevel()).removeSnapshots(player);
+                removeVaultHistory(player);
 
-        // Reset discoveries
-        DiscoveredModelsData.get(player.getLevel()).reset(player.getUUID());
-        removeDiscoveries(player);
+                BountyData.get().getAllLegendaryFor(player.getUUID()).clear();
+                BountyData.get().resetAllBounties(player.getUUID());
 
-        // Reset eternals
-        removeEternals(player);
+                DiscoveredModelsData.get(player.getLevel()).reset(player.getUUID());
+                removeDiscoveries(player);
 
-        // Reset paradox
-        removeParadox(player);
+                removeEternals(player);
+                removeParadox(player);
+                removeBlackMarket(player);
+                resetGreedData(player);
+                resetProficiencyData(player);
+                resetReputationData(player);
+                resetSpiritData(player);
+                resetTitlesData(player);
+                resetSkillAltarData(player);
 
-        // Reset blackmarket
-        removeBlackMarket(player);
+                Util.sendGodMessageToPlayer(player, "You have been punished! Now you must return to the start!");
+            }
+        }
 
-        // Reset greed data
-        resetGreedData(player);
-
-        // Reset proficiency
-        resetProficiencyData(player);
-
-        // Reset reputation
-        resetReputationData(player);
-
-        // Reset spirits
-        resetSpiritData(player);
-
-        // Reset titles
-        resetTitlesData(player);
-
-        // Reset skill altar data
-        resetSkillAltarData(player);
-
-        ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " player data completely cleared!");
-        Util.sendGodMessageToPlayer(player, "You have been punished! Now you must return to the start!");
+        ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " player " + mode + " data are cleared!");
 
         return 1;
     }

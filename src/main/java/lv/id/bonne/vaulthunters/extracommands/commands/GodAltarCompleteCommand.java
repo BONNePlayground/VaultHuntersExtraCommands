@@ -104,7 +104,10 @@ public class GodAltarCompleteCommand
                 }
             }
         }
-
+        else
+        {
+            ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " has no active God Altar!");
+        }
 
         return 1;
     }

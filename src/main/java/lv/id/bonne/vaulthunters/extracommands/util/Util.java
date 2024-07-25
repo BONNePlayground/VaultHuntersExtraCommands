@@ -12,15 +12,45 @@ import java.util.List;
 import java.util.Optional;
 
 import iskallia.vault.core.vault.influence.VaultGod;
+import iskallia.vault.init.ModItems;
 import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.*;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.Item;
 
 
 public class Util
 {
+    public enum ItemType
+    {
+        SWORD(ModItems.SWORD),
+        AXE(ModItems.AXE),
+        BOOTS(ModItems.BOOTS),
+        CHESTPLATE(ModItems.CHESTPLATE),
+        HELMET(ModItems.HELMET),
+        LEGGINGS(ModItems.LEGGINGS),
+        SHIELD(ModItems.SHIELD),
+        FOCUS(ModItems.FOCUS),
+        WAND(ModItems.WAND),
+        MAGNET(ModItems.MAGNET);
+
+        ItemType(Item item)
+        {
+            this.item = item;
+        }
+
+        public Item item()
+        {
+            return this.item;
+        }
+
+
+        private final Item item;
+    }
+
+
     /**
      * This method log error message.
      * @param message The message that need to be logged.

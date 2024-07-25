@@ -16,27 +16,22 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import java.util.*;
 
 import iskallia.vault.dynamodel.registry.DynamicModelRegistry;
-import iskallia.vault.gear.VaultGearRarity;
-import iskallia.vault.init.ModConfigs;
 import iskallia.vault.init.ModDynamicModels;
 import iskallia.vault.init.ModItems;
-import iskallia.vault.util.MiscUtils;
 import iskallia.vault.world.data.DiscoveredModelsData;
 import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
 import lv.id.bonne.vaulthunters.extracommands.util.Util;
+import lv.id.bonne.vaulthunters.extracommands.util.Util.ItemType;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.server.command.EnumArgument;
 
 
@@ -51,7 +46,7 @@ public class ModelUnlockCommand
     private static List<String> generateSuggestions(CommandContext<CommandSourceStack> context)
         throws CommandSyntaxException
     {
-        Item item = context.getArgument("item", Item.class);
+        ItemType item = context.getArgument("item", ItemType.class);
         ServerPlayer player = EntityArgument.getPlayer(context, "player");
 
         DiscoveredModelsData modelsData = DiscoveredModelsData.get(player.server);
@@ -92,11 +87,11 @@ public class ModelUnlockCommand
 
         LiteralArgumentBuilder<CommandSourceStack> command = Commands.literal("model").
             then(Commands.argument("player", EntityArgument.players()).
-                then(Commands.argument("item", EnumArgument.enumArgument(Item.class)).
+                then(Commands.argument("item", EnumArgument.enumArgument(ItemType.class)).
                     then(Commands.argument("model", ResourceLocationArgument.id()).
                         suggests(SUGGEST_MODEL).
                         executes(ctx -> unlockModel(EntityArgument.getPlayer(ctx, "player"),
-                            ctx.getArgument("item", Item.class),
+                            ctx.getArgument("item", ItemType.class),
                             ResourceLocationArgument.getId(ctx, "model")))
                     )
                 )
@@ -111,7 +106,7 @@ public class ModelUnlockCommand
      * @param player Player which bounty need to be completed.
      * @return 1
      */
-    private static int unlockModel(ServerPlayer player, Item item, ResourceLocation resourceLocation)
+    private static int unlockModel(ServerPlayer player, ItemType item, ResourceLocation resourceLocation)
     {
         DiscoveredModelsData modelsData = DiscoveredModelsData.get(player.server);
         if (modelsData.discoverModel(player.getUUID(), resourceLocation))
@@ -137,20 +132,5 @@ public class ModelUnlockCommand
         }
 
         return 1;
-    }
-
-
-    enum Item
-    {
-        SWORD,
-        AXE,
-        BOOTS,
-        CHESTPLATE,
-        HELMET,
-        LEGGINGS,
-        SHIELD,
-        FOCUS,
-        WAND,
-        MAGNET
     }
 }

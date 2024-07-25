@@ -54,6 +54,7 @@ public class ExtraCommands
             ModelUnlockCommand.register(event.getDispatcher());
             TrinketUnlockCommand.register(event.getDispatcher());
             AlchemyUnlockCommand.register(event.getDispatcher());
+            WorkbenchUnlockCommand.register(event.getDispatcher());
         }
     }
 

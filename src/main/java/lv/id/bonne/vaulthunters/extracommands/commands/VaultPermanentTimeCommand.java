@@ -75,12 +75,12 @@ public class VaultPermanentTimeCommand
             if (extraSeconds < 0)
             {
                 Util.sendGodMessageToPlayer(player,
-                    "You have been punished! I remove " + (-extraSeconds)  + " seconds from your Vault!");
+                    "You have been punished! I remove " + (-extraSeconds)  + " seconds from your all next vaults!");
             }
             else
             {
                 Util.sendGodMessageToPlayer(player,
-                    "You have been blessed with extra " + extraSeconds  + " seconds in the Vault!");
+                    "You have been blessed with extra " + extraSeconds  + " seconds for your all next vaults!");
             }
 
             extraCommandsData.setDirty();

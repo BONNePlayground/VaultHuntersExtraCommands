@@ -8,16 +8,12 @@ package lv.id.bonne.vaulthunters.extracommands.commands;
 
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import iskallia.vault.core.vault.influence.VaultGod;
 import iskallia.vault.core.vault.pylon.PylonBuff;
 import iskallia.vault.effect.PylonEffect;
 import iskallia.vault.init.ModEffects;
@@ -26,8 +22,7 @@ import iskallia.vault.network.message.PylonConsumeParticleMessage;
 import iskallia.vault.world.data.PlayerPylons;
 import iskallia.vault.world.data.ServerVaults;
 import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
-import net.minecraft.ChatFormatting;
-import net.minecraft.Util;
+import lv.id.bonne.vaulthunters.extracommands.util.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -68,22 +63,13 @@ public class VaultPylonCommand
         LiteralArgumentBuilder<CommandSourceStack> vaultLiteral = Commands.literal("vault");
 
         LiteralArgumentBuilder<CommandSourceStack> addBuff = Commands.literal("pylon").
-            executes(ctx -> addPylonEffect(null,
-                Optional.empty(),
-                ctx.getSource().getPlayerOrException())).
-            then(Commands.argument("name", StringArgumentType.word()).
-                executes(ctx -> addPylonEffect(ctx.getArgument("name", String.class),
-                    Optional.empty(),
-                    ctx.getSource().getPlayerOrException())).
+            executes(ctx -> addPylonEffect(ctx.getSource().getPlayerOrException(), Optional.empty())).
+            then(Commands.argument("player", EntityArgument.players()).
+                executes(ctx -> addPylonEffect(EntityArgument.getPlayer(ctx, "player"), Optional.empty())).
                 then(Commands.argument("pylon", NbtTagArgument.nbtTag()).
                     suggests(SUGGEST_EFFECTS).
-                    executes(ctx -> addPylonEffect(ctx.getArgument("name", String.class),
-                        Optional.of(NbtTagArgument.getNbtTag(ctx, "pylon")),
-                        ctx.getSource().getPlayerOrException())).
-                    then(Commands.argument("player", EntityArgument.players()).
-                        executes(ctx -> addPylonEffect(ctx.getArgument("name", String.class),
-                            Optional.of(NbtTagArgument.getNbtTag(ctx, "pylon")),
-                            EntityArgument.getPlayer(ctx, "player"))))));
+                    executes(ctx -> addPylonEffect(EntityArgument.getPlayer(ctx, "player"),
+                    Optional.of(NbtTagArgument.getNbtTag(ctx, "pylon"))))));
 
         dispatcher.register(baseLiteral.then(vaultLiteral.then(addBuff)));
     }
@@ -94,7 +80,7 @@ public class VaultPylonCommand
      * @param player that receives pylon buff.
      * @return 1
      */
-    private static int addPylonEffect(String name, Optional<Tag> optionalValue, ServerPlayer player)
+    private static int addPylonEffect(ServerPlayer player, Optional<Tag> optionalValue)
     {
         Level world = player.getLevel();
 
@@ -105,13 +91,12 @@ public class VaultPylonCommand
             if (optionalValue.isPresent() && !optionalValue.get().getAsString().isEmpty())
             {
                 ExtraCommands.LOGGER.debug("Parsing " + optionalValue.get().getAsString() + " NBT tag as PylonBuff.");
-
                 config = PylonBuff.Config.fromNBT((CompoundTag) optionalValue.get());
             }
             else
             {
                 ExtraCommands.LOGGER.debug("Getting random PylonBuff.");
-                config = getRandom(ExtraCommands.CONFIGURATION.getPylonEffects()).orElse(null);
+                config = Util.getRandom(ExtraCommands.CONFIGURATION.getPylonEffects()).orElse(null);
             }
 
             if (config == null)
@@ -149,59 +134,13 @@ public class VaultPylonCommand
                 player.addEffect(new MobEffectInstance(effect, duration, 60, false, false, true));
             }
 
-            TextComponent senderTxt;
-
-            if (name != null && !name.isEmpty())
-            {
-                senderTxt = new TextComponent("");
-                senderTxt.withStyle(ChatFormatting.DARK_PURPLE).
-                    append((new TextComponent(name)).withStyle(ChatFormatting.DARK_GREEN)).
-                    append((new TextComponent(": ")).withStyle(ChatFormatting.WHITE));
-            }
-            else
-            {
-                Optional<VaultGod> random = getRandom(Arrays.stream(VaultGod.values()).toList());
-
-                if (random.isPresent())
-                {
-                    VaultGod god = random.get();
-                    senderTxt = new TextComponent("[VG] ");
-
-                    senderTxt.withStyle(ChatFormatting.DARK_PURPLE).
-                        append((new TextComponent(god.getName())).withStyle(god.getChatColor())).
-                        append((new TextComponent(": ")).withStyle(ChatFormatting.WHITE));
-                }
-                else
-                {
-                    senderTxt = new TextComponent("[VG] ");
-
-                    senderTxt.withStyle(ChatFormatting.DARK_PURPLE).
-                        append((new TextComponent("[BONNe]")).withStyle(ChatFormatting.DARK_RED)).
-                        append((new TextComponent(": ")).withStyle(ChatFormatting.WHITE));
-                }
-            }
-
-            senderTxt.append((new TextComponent("I have blessed you with ")).
-                append((new TextComponent(config.getDescription())).
-                    setStyle(Style.EMPTY.withColor(config.getColor()))).
-                append(" Pylon!"));
-
-            player.sendMessage(senderTxt, Util.NIL_UUID);
+            Util.sendGodMessageToPlayer(player,
+                new TextComponent("I have blessed you with ").
+                    append((new TextComponent(config.getDescription())).
+                        setStyle(Style.EMPTY.withColor(config.getColor()))).
+                    append(" Pylon!"));
         }
 
         return 1;
-    }
-
-
-    /**
-     * This method returns random element from given list.
-     * @param input List of input elements.
-     * @return Optional of random element from list.
-     */
-    private static <T> Optional<T> getRandom(List<T> input)
-    {
-        int count = (int) (input.size() * Math.random());
-
-        return input.stream().skip(count).findAny();
     }
 }

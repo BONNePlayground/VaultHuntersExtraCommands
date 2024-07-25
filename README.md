@@ -59,3 +59,5 @@ Proficiency Commands:
 - `/the_vault_extra proficiency increase <player> <type> <amount>` - increases players proficiency in selected type.
 - `/the_vault_extra proficiency reduce <player> <type> <amount>` - reduces players proficiency in selected type.
 
+Reset Command:
+- `/the_vault_extra model <player> <item> <model>` - unlocks requested model for player. 

@@ -51,6 +51,7 @@ public class ExtraCommands
             KickCommand.register(event.getDispatcher());
             VaultPermanentTimeCommand.register(event.getDispatcher());
             ProficiencyCommand.register(event.getDispatcher());
+            ModelUnlockCommand.register(event.getDispatcher());
         }
     }
 

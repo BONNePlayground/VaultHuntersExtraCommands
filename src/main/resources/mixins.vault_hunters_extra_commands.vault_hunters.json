@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_17",
   "required": true,
   "mixins": [
+    "AngelBlockAccessor",
     "DiscoveredAlchemyEffectsDataAccessor",
     "DiscoveredWorkbenchModifiersDataAccessor",
     "DiscoveryGoalStatesDataAccessor",

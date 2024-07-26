@@ -55,6 +55,7 @@ public class ExtraCommands
             TrinketUnlockCommand.register(event.getDispatcher());
             AlchemyUnlockCommand.register(event.getDispatcher());
             WorkbenchUnlockCommand.register(event.getDispatcher());
+            LocateAngelBlockCommand.register(event.getDispatcher());
         }
     }
 

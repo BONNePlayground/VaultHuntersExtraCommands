@@ -64,3 +64,7 @@ Discoveries Unlock Command:
 - `/the_vault_extra discoveries trinket <player> <trinket>` - unlocks requested trinket for player. 
 - `/the_vault_extra discoveries alchemy <player> <effect>` - unlocks requested alchemy effect for player. 
 - `/the_vault_extra discoveries workbench <player> <item> <modifier>` - unlocks requested workbench modifier for player. 
+
+Locate Commands:
+- `/the_vault_extra locate angel_block` - command lists all known (loaded) angel blocks and allows to teleport to them
+- `/the_vault_extra locate angel_block <distance>` - command sends green particles around angel blocks around player in requested distance

@@ -19,6 +19,7 @@ import java.util.Optional;
 import iskallia.vault.config.gear.VaultGearTierConfig;
 import iskallia.vault.gear.GearRollHelper;
 import iskallia.vault.gear.VaultGearModifierHelper;
+import iskallia.vault.gear.VaultGearRarity;
 import iskallia.vault.gear.VaultGearState;
 import iskallia.vault.gear.attribute.VaultGearModifier;
 import iskallia.vault.gear.data.VaultGearData;
@@ -66,9 +67,49 @@ public class GearDebugCommand
                 executes(ctx -> setRepairSlots(ctx.getSource().getPlayerOrException(),
                     IntegerArgumentType.getInteger(ctx, "slots"))));
 
+        LiteralArgumentBuilder<CommandSourceStack> rarity = Commands.literal("rarity").
+            then(Commands.argument("roll", EnumArgument.enumArgument(VaultGearRarity.class)).
+                executes(ctx -> setRarity(ctx.getSource().getPlayerOrException(), ctx.getArgument("roll", VaultGearRarity.class))));
+
         dispatcher.register(baseLiteral.then(gearDebug.
             then(legendary).
+            then(rarity).
             then(repair.then(breakGear).then(fixGear).then(setSlots))));
+    }
+
+
+    private static int setRarity(ServerPlayer player, VaultGearRarity gearRarity)
+    {
+        ItemStack mainHandItem = player.getMainHandItem();
+
+        if (!(mainHandItem.getItem() instanceof VaultGearItem))
+        {
+            player.sendMessage(new TextComponent("No vaultgear held in hand"), net.minecraft.Util.NIL_UUID);
+            throw new IllegalArgumentException("Not vaultgear in hand");
+        }
+
+        VaultGearData data = VaultGearData.read(mainHandItem);
+
+        if (data.getState() != VaultGearState.IDENTIFIED)
+        {
+            player.sendMessage(new TextComponent("Only identified gear can change its rarity"),
+                net.minecraft.Util.NIL_UUID);
+            throw new IllegalArgumentException("Not identified vaultgear in hand");
+        }
+
+        VaultGearRarity old = data.getRarity();
+
+        if (old != gearRarity)
+        {
+            data.setRarity(gearRarity);
+            data.write(mainHandItem);
+        }
+
+        Util.sendGodMessageToPlayer(player,
+            new TextComponent("Oh, it is just a display thing! Did you wanted something else?").
+                withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
+
+        return 0;
     }
 
 

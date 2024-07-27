@@ -78,5 +78,7 @@ Gear Debug commands:
 - `/the_vault_extra gear_debug repairs fix` - removes used gear slot by 1 on gear player is holding
 - `/the_vault_extra gear_debug repairs break` - adds used gear slot by 1 on gear player is holding
 - `/the_vault_extra gear_debug repairs setSlots <number>` - sets the repair solt count on gear player is holding.
+- `/the_vault_extra gear_debug rarity <rarity>` - sets gear piece rarity. (this is only display thing)
+- 
 
 

@@ -10,13 +10,14 @@ package lv.id.bonne.vaulthunters.extracommands.commands;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import iskallia.vault.config.gear.VaultGearTierConfig;
+import iskallia.vault.dynamodel.registry.DynamicModelRegistry;
 import iskallia.vault.gear.GearRollHelper;
 import iskallia.vault.gear.VaultGearModifierHelper;
 import iskallia.vault.gear.VaultGearRarity;
@@ -24,12 +25,18 @@ import iskallia.vault.gear.VaultGearState;
 import iskallia.vault.gear.attribute.VaultGearModifier;
 import iskallia.vault.gear.data.VaultGearData;
 import iskallia.vault.gear.item.VaultGearItem;
+import iskallia.vault.init.ModDynamicModels;
+import iskallia.vault.init.ModGearAttributes;
+import iskallia.vault.world.data.DiscoveredModelsData;
 import lv.id.bonne.vaulthunters.extracommands.util.Util;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.item.ItemStack;
@@ -38,11 +45,31 @@ import net.minecraftforge.server.command.EnumArgument;
 
 public class GearDebugCommand
 {
-    /**
-     * Registers the command that toggles a pause for the vault.
-     *
-     * @param dispatcher The command dispatcher.
-     */
+    private static final SuggestionProvider<CommandSourceStack> SUGGEST_MODEL = ((context, builder) ->
+        SharedSuggestionProvider.suggest(
+            generateSuggestions(context),
+            builder));
+
+
+    private static List<String> generateSuggestions(CommandContext<CommandSourceStack> context)
+        throws CommandSyntaxException
+    {
+        ServerPlayer player = context.getSource().getPlayerOrException();
+
+        DiscoveredModelsData modelsData = DiscoveredModelsData.get(player.server);
+        Set<ResourceLocation> discoveredModels = modelsData.getDiscoveredModels(player.getUUID());
+
+        Optional<DynamicModelRegistry<?>> associatedRegistry =
+            ModDynamicModels.REGISTRIES.getAssociatedRegistry(player.getMainHandItem().getItem());
+
+        return associatedRegistry.map(dynamicModelRegistry -> dynamicModelRegistry.getIds().
+                stream().
+                filter(resource -> !discoveredModels.contains(resource)).
+                map(ResourceLocation::toString).toList()).
+            orElse(Collections.emptyList());
+    }
+
+
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher)
     {
         LiteralArgumentBuilder<CommandSourceStack> baseLiteral = Commands.literal("the_vault_extra").
@@ -71,10 +98,46 @@ public class GearDebugCommand
             then(Commands.argument("roll", EnumArgument.enumArgument(VaultGearRarity.class)).
                 executes(ctx -> setRarity(ctx.getSource().getPlayerOrException(), ctx.getArgument("roll", VaultGearRarity.class))));
 
+        LiteralArgumentBuilder<CommandSourceStack> model = Commands.literal("model").
+            then(Commands.argument("resource", ResourceLocationArgument.id()).
+                suggests(SUGGEST_MODEL).
+                executes(ctx -> setModel(ctx.getSource().getPlayerOrException(), ResourceLocationArgument.getId(ctx, "resource"))));
+
         dispatcher.register(baseLiteral.then(gearDebug.
             then(legendary).
             then(rarity).
+            then(model).
             then(repair.then(breakGear).then(fixGear).then(setSlots))));
+    }
+
+
+    private static int setModel(ServerPlayer player, ResourceLocation model)
+    {
+        ItemStack mainHandItem = player.getMainHandItem();
+
+        if (!(mainHandItem.getItem() instanceof VaultGearItem))
+        {
+            player.sendMessage(new TextComponent("No vaultgear held in hand"), net.minecraft.Util.NIL_UUID);
+            throw new IllegalArgumentException("Not vaultgear in hand");
+        }
+
+        VaultGearData data = VaultGearData.read(mainHandItem);
+
+        if (data.getState() != VaultGearState.IDENTIFIED)
+        {
+            player.sendMessage(new TextComponent("Only identified gear can change its model"),
+                net.minecraft.Util.NIL_UUID);
+            throw new IllegalArgumentException("Not identified vaultgear in hand");
+        }
+
+        data.updateAttribute(ModGearAttributes.GEAR_MODEL, model);
+        data.write(mainHandItem);
+
+        Util.sendGodMessageToPlayer(player,
+            new TextComponent("I updated your gear model as requested.").
+                withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
+
+        return 1;
     }
 
 
@@ -109,7 +172,7 @@ public class GearDebugCommand
             new TextComponent("Oh, it is just a display thing! Did you wanted something else?").
                 withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
 
-        return 0;
+        return 1;
     }
 
 

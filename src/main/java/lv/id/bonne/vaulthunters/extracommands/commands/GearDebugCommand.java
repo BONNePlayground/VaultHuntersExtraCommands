@@ -8,6 +8,7 @@ package lv.id.bonne.vaulthunters.extracommands.commands;
 
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 
 import java.util.ArrayList;
@@ -16,7 +17,6 @@ import java.util.List;
 import java.util.Optional;
 
 import iskallia.vault.config.gear.VaultGearTierConfig;
-import iskallia.vault.core.random.JavaRandom;
 import iskallia.vault.gear.GearRollHelper;
 import iskallia.vault.gear.VaultGearModifierHelper;
 import iskallia.vault.gear.VaultGearState;
@@ -46,25 +46,132 @@ public class GearDebugCommand
     {
         LiteralArgumentBuilder<CommandSourceStack> baseLiteral = Commands.literal("the_vault_extra").
             requires(stack -> stack.hasPermission(1));
-        LiteralArgumentBuilder<CommandSourceStack> vaultLiteral = Commands.literal("gear_debug");
+        LiteralArgumentBuilder<CommandSourceStack> gearDebug = Commands.literal("gear_debug");
 
-
-        LiteralArgumentBuilder<CommandSourceStack> kick = Commands.literal("rollLegendary").
+        // Legendary rolls
+        LiteralArgumentBuilder<CommandSourceStack> legendary = Commands.literal("rollLegendary").
             executes(ctx -> forceLegendary(ctx.getSource().getPlayerOrException(), Roll.NONE)).
             then(Commands.argument("roll", EnumArgument.enumArgument(Roll.class)).
                 executes(ctx -> forceLegendary(ctx.getSource().getPlayerOrException(),
                     ctx.getArgument("roll", Roll.class))));
+        // Repair commands
+        LiteralArgumentBuilder<CommandSourceStack> repair = Commands.literal("repairs");
 
-        dispatcher.register(baseLiteral.then(vaultLiteral.then(kick)));
+        LiteralArgumentBuilder<CommandSourceStack> breakGear = Commands.literal("break").
+            executes(ctx -> repairs(ctx.getSource().getPlayerOrException(), true));
+        LiteralArgumentBuilder<CommandSourceStack> fixGear = Commands.literal("fix").
+            executes(ctx -> repairs(ctx.getSource().getPlayerOrException(), false));
+        LiteralArgumentBuilder<CommandSourceStack> setSlots = Commands.literal("setSlots").
+            then(Commands.argument("slots", IntegerArgumentType.integer(1)).
+                executes(ctx -> setRepairSlots(ctx.getSource().getPlayerOrException(),
+                    IntegerArgumentType.getInteger(ctx, "slots"))));
+
+        dispatcher.register(baseLiteral.then(gearDebug.
+            then(legendary).
+            then(repair.then(breakGear).then(fixGear).then(setSlots))));
     }
 
 
-    /**
-     * This method completes given player active bounty.
-     *
-     * @param player Player which bounty need to be completed.
-     * @return 1
-     */
+    private static int setRepairSlots(ServerPlayer player, int newSlotCount)
+    {
+        ItemStack mainHandItem = player.getMainHandItem();
+
+        if (!(mainHandItem.getItem() instanceof VaultGearItem))
+        {
+            player.sendMessage(new TextComponent("No vaultgear held in hand"), net.minecraft.Util.NIL_UUID);
+            throw new IllegalArgumentException("Not vaultgear in hand");
+        }
+
+        VaultGearData data = VaultGearData.read(mainHandItem);
+
+        if (data.getState() != VaultGearState.IDENTIFIED)
+        {
+            player.sendMessage(new TextComponent("Only identified gear can be fixed or broken"),
+                net.minecraft.Util.NIL_UUID);
+            throw new IllegalArgumentException("Not identified vaultgear in hand");
+        }
+
+        int old = data.getRepairSlots();
+
+        if (old != newSlotCount)
+        {
+            data.setRepairSlots(newSlotCount);
+            data.write(mainHandItem);
+        }
+
+        if (old > newSlotCount)
+        {
+            Util.sendGodMessageToPlayer(player,
+                new TextComponent("I do not like this tool! I reduce number of repairs you can have on it!").
+                    withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
+        }
+        else
+        {
+            Util.sendGodMessageToPlayer(player,
+                new TextComponent("Your tool impresses me! You can use is a bit longer now!").
+                    withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
+        }
+
+        return 1;
+    }
+
+
+    private static int repairs(ServerPlayer player, boolean breakItem)
+    {
+        ItemStack mainHandItem = player.getMainHandItem();
+
+        if (!(mainHandItem.getItem() instanceof VaultGearItem))
+        {
+            player.sendMessage(new TextComponent("No vaultgear held in hand"), net.minecraft.Util.NIL_UUID);
+            throw new IllegalArgumentException("Not vaultgear in hand");
+        }
+
+        VaultGearData data = VaultGearData.read(mainHandItem);
+
+        if (data.getState() != VaultGearState.IDENTIFIED)
+        {
+            player.sendMessage(new TextComponent("Only identified gear can be fixed or broken"),
+                net.minecraft.Util.NIL_UUID);
+            throw new IllegalArgumentException("Not identified vaultgear in hand");
+        }
+
+        int usedRepairSlots = data.getUsedRepairSlots() + (breakItem ? 1 : -1);
+
+        if (usedRepairSlots > data.getRepairSlots())
+        {
+            Util.sendGodMessageToPlayer(player,
+                new TextComponent("I am god, not a magician! I cannot break thing that is already broken!").
+                    withStyle(Style.EMPTY.withColor(ChatFormatting.RED)));
+        }
+        else if (usedRepairSlots < 0)
+        {
+            Util.sendGodMessageToPlayer(player,
+                new TextComponent("I am god, not a magician! I cannot fix thing that is fully fixed!").
+                    withStyle(Style.EMPTY.withColor(ChatFormatting.RED)));
+        }
+        else
+        {
+            data.setUsedRepairSlots(usedRepairSlots);
+            data.write(mainHandItem);
+
+            if (breakItem)
+            {
+                Util.sendGodMessageToPlayer(player,
+                    new TextComponent("You were naughty! I think you deserve less usage of this tool!").
+                        withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
+            }
+            else
+            {
+                Util.sendGodMessageToPlayer(player,
+                    new TextComponent("Your good behaviour resulted inspired me! I fixed your tool!").
+                        withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
+            }
+        }
+
+        return 0;
+    }
+
+
     private static int forceLegendary(ServerPlayer player, Roll roll)
     {
         ItemStack mainHandItem = player.getMainHandItem();

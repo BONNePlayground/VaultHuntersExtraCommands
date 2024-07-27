@@ -75,3 +75,8 @@ Gear Debug commands:
   - ADD - rolls on all modifiers, and allow to have multiple (only prefixes/suffixes)
   - REROLL - finds legendary modifier and rerolls it.
   - IMPLICIT - adds legendary modifier to the implicit modifiers.
+- `/the_vault_extra gear_debug repairs fix` - removes used gear slot by 1 on gear player is holding
+- `/the_vault_extra gear_debug repairs break` - adds used gear slot by 1 on gear player is holding
+- `/the_vault_extra gear_debug repairs setSlots <number>` - sets the repair solt count on gear player is holding.
+
+

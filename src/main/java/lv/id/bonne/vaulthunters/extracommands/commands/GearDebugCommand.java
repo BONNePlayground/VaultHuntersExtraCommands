@@ -1,0 +1,232 @@
+//
+// Created by BONNe
+// Copyright - 2024
+//
+
+
+package lv.id.bonne.vaulthunters.extracommands.commands;
+
+
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import iskallia.vault.config.gear.VaultGearTierConfig;
+import iskallia.vault.core.random.JavaRandom;
+import iskallia.vault.gear.GearRollHelper;
+import iskallia.vault.gear.VaultGearModifierHelper;
+import iskallia.vault.gear.VaultGearState;
+import iskallia.vault.gear.attribute.VaultGearModifier;
+import iskallia.vault.gear.data.VaultGearData;
+import iskallia.vault.gear.item.VaultGearItem;
+import lv.id.bonne.vaulthunters.extracommands.util.Util;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Tuple;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.server.command.EnumArgument;
+
+
+public class GearDebugCommand
+{
+    /**
+     * Registers the command that toggles a pause for the vault.
+     *
+     * @param dispatcher The command dispatcher.
+     */
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher)
+    {
+        LiteralArgumentBuilder<CommandSourceStack> baseLiteral = Commands.literal("the_vault_extra").
+            requires(stack -> stack.hasPermission(1));
+        LiteralArgumentBuilder<CommandSourceStack> vaultLiteral = Commands.literal("gear_debug");
+
+
+        LiteralArgumentBuilder<CommandSourceStack> kick = Commands.literal("rollLegendary").
+            executes(ctx -> forceLegendary(ctx.getSource().getPlayerOrException(), Roll.NONE)).
+            then(Commands.argument("roll", EnumArgument.enumArgument(Roll.class)).
+                executes(ctx -> forceLegendary(ctx.getSource().getPlayerOrException(),
+                    ctx.getArgument("roll", Roll.class))));
+
+        dispatcher.register(baseLiteral.then(vaultLiteral.then(kick)));
+    }
+
+
+    /**
+     * This method completes given player active bounty.
+     *
+     * @param player Player which bounty need to be completed.
+     * @return 1
+     */
+    private static int forceLegendary(ServerPlayer player, Roll roll)
+    {
+        ItemStack mainHandItem = player.getMainHandItem();
+
+        if (!(mainHandItem.getItem() instanceof VaultGearItem))
+        {
+            player.sendMessage(new TextComponent("No vaultgear held in hand"), net.minecraft.Util.NIL_UUID);
+            throw new IllegalArgumentException("Not vaultgear in hand");
+        }
+
+        VaultGearData data = VaultGearData.read(mainHandItem);
+
+        if (data.getState() != VaultGearState.IDENTIFIED)
+        {
+            player.sendMessage(new TextComponent("Only identified gear can roll legendary"),
+                net.minecraft.Util.NIL_UUID);
+            throw new IllegalArgumentException("Not identified vaultgear in hand");
+        }
+
+        if (!data.isModifiable())
+        {
+            throw new IllegalArgumentException("Gear is not modifiable!!!");
+        }
+
+        VaultGearTierConfig config = VaultGearTierConfig.getConfig(mainHandItem).orElse(null);
+
+        if (config == null)
+        {
+            throw new IllegalArgumentException("Unknown VaultGear");
+        }
+
+        // This method rolls legendary modifier on your gear.
+
+        if (roll == Roll.ADD || roll == Roll.NONE && getLegendaryAttribute(config, data).isEmpty())
+        {
+            VaultGearModifierHelper.generateLegendaryModifier(mainHandItem, GearRollHelper.rand);
+
+            Util.sendGodMessageToPlayer(player,
+                new TextComponent("Your tool has been blessed!").
+                    withStyle(Style.EMPTY.withColor(ChatFormatting.GOLD)));
+        }
+        else if (roll == Roll.REROLL)
+        {
+            getLegendaryAttribute(config, data).ifPresent(legendaryPair ->
+                upgradeModifier(player, mainHandItem, data, config, legendaryPair));
+        }
+        else if (roll == Roll.IMPLICIT)
+        {
+            List<Tuple<VaultGearModifier.AffixType, VaultGearModifier<?>>> modifiers = new ArrayList<>();
+            data.getModifiers(VaultGearModifier.AffixType.IMPLICIT).forEach(modifier ->
+            {
+                if (!shouldRemove(modifier, config))
+                {
+                    modifiers.add(new Tuple<>(VaultGearModifier.AffixType.IMPLICIT, modifier));
+                }
+            });
+
+            Util.getRandom(modifiers).ifPresent(modifierPair ->
+                upgradeModifier(player, mainHandItem, data, config, modifierPair));
+        }
+        else if (roll == Roll.NONE && getLegendaryAttribute(config, data).isPresent())
+        {
+            Util.sendGodMessageToPlayer(player,
+                new TextComponent("Your are asking too much from us!").
+                    withStyle(Style.EMPTY.withColor(ChatFormatting.DARK_RED)));
+        }
+
+        return 1;
+    }
+
+
+    private static void upgradeModifier(ServerPlayer player, ItemStack mainHandItem,
+        VaultGearData data,
+        VaultGearTierConfig config,
+        Tuple<VaultGearModifier.AffixType, VaultGearModifier<?>> legendary)
+    {
+        // Upgrade modifier
+        VaultGearModifier<?> newMod = config.maxAndIncreaseTier(legendary.getA(),
+            legendary.getB(),
+            data.getItemLevel(),
+            2,
+            GearRollHelper.rand);
+
+        if (newMod == null)
+        {
+            throw new IllegalArgumentException("Could not upgrade your vault gear modifiers!");
+        }
+        else
+        {
+            newMod.setCategory(VaultGearModifier.AffixCategory.LEGENDARY);
+
+            if (data.removeModifier(legendary.getB()))
+            {
+                data.addModifierFirst(legendary.getA(), newMod);
+
+                Util.sendGodMessageToPlayer(player,
+                    new TextComponent("Your tool has been blessed!").
+                        withStyle(Style.EMPTY.withColor(ChatFormatting.GOLD)));
+            }
+
+            data.write(mainHandItem);
+        }
+    }
+
+
+    private static Optional<Tuple<VaultGearModifier.AffixType, VaultGearModifier<?>>> getLegendaryAttribute(
+        VaultGearTierConfig config,
+        VaultGearData data)
+    {
+        if (!data.isModifiable())
+        {
+            return Optional.empty();
+        }
+
+        List<Tuple<VaultGearModifier.AffixType, VaultGearModifier<?>>> modifiers = new ArrayList<>();
+        data.getModifiers(VaultGearModifier.AffixType.IMPLICIT).
+            forEach((modifier) -> modifiers.add(new Tuple<>(VaultGearModifier.AffixType.IMPLICIT, modifier)));
+        data.getModifiers(VaultGearModifier.AffixType.PREFIX).
+            forEach((modifier) -> modifiers.add(new Tuple<>(VaultGearModifier.AffixType.PREFIX, modifier)));
+        data.getModifiers(VaultGearModifier.AffixType.SUFFIX).
+            forEach((modifier) -> modifiers.add(new Tuple<>(VaultGearModifier.AffixType.SUFFIX, modifier)));
+        modifiers.removeIf(pair -> shouldRemove(pair.getB(), config));
+
+        if (modifiers.isEmpty())
+        {
+            // No modifiers.
+            return Optional.empty();
+        }
+
+        // Reorder modifiers.
+        Collections.shuffle(modifiers);
+
+        return modifiers.stream().
+            filter(mod -> mod.getB().getCategory() == VaultGearModifier.AffixCategory.LEGENDARY).
+            findAny();
+    }
+
+
+    private static boolean shouldRemove(VaultGearModifier<?> modifier, VaultGearTierConfig config)
+    {
+        VaultGearTierConfig.ModifierTierGroup group = config.getTierGroup(modifier.getModifierIdentifier());
+
+        if (!modifier.getCategory().isModifiableByArtisanFoci())
+        {
+            return true;
+        }
+        if (group == null)
+        {
+            return false;
+        }
+        else
+        {
+            return group.size() <= 1 || group.getTags().contains("noLegendary");
+        }
+    }
+
+
+    enum Roll
+    {
+        REROLL,
+        ADD,
+        NONE,
+        IMPLICIT
+    }
+}

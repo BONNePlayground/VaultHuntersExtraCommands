@@ -68,3 +68,10 @@ Discoveries Unlock Command:
 Locate Commands:
 - `/the_vault_extra locate angel_block` - command lists all known (loaded) angel blocks and allows to teleport to them
 - `/the_vault_extra locate angel_block <distance>` - command sends green particles around angel blocks around player in requested distance
+
+Gear Debug commands:
+- `/the_vault_extra gear_debug rollLegendary [<mode>]` - allows to rollLegendary modifier on your gear: 
+  - NONE - rolls once, if it has legendary modifier, then you do not get another chance.
+  - ADD - rolls on all modifiers, and allow to have multiple (only prefixes/suffixes)
+  - REROLL - finds legendary modifier and rerolls it.
+  - IMPLICIT - adds legendary modifier to the implicit modifiers.

@@ -80,5 +80,6 @@ Gear Debug commands:
 - `/the_vault_extra gear_debug repairs setSlots <number>` - sets the repair solt count on gear player is holding.
 - `/the_vault_extra gear_debug rarity <rarity>` - sets gear piece rarity. (this is only display thing)
 - `/the_vault_extra gear_debug model <model>` - sets gear piece model
+- `/the_vault_extra gear_debug potential <number>` - sets gear piece crafting potential value 
 
 

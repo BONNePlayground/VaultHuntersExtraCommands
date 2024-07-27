@@ -39,6 +39,7 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Tuple;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.server.command.EnumArgument;
 
@@ -94,20 +95,58 @@ public class GearDebugCommand
                 executes(ctx -> setRepairSlots(ctx.getSource().getPlayerOrException(),
                     IntegerArgumentType.getInteger(ctx, "slots"))));
 
+        // Rarity
         LiteralArgumentBuilder<CommandSourceStack> rarity = Commands.literal("rarity").
             then(Commands.argument("roll", EnumArgument.enumArgument(VaultGearRarity.class)).
                 executes(ctx -> setRarity(ctx.getSource().getPlayerOrException(), ctx.getArgument("roll", VaultGearRarity.class))));
-
+        // Model
         LiteralArgumentBuilder<CommandSourceStack> model = Commands.literal("model").
             then(Commands.argument("resource", ResourceLocationArgument.id()).
                 suggests(SUGGEST_MODEL).
                 executes(ctx -> setModel(ctx.getSource().getPlayerOrException(), ResourceLocationArgument.getId(ctx, "resource"))));
+        // Proficiency
+        LiteralArgumentBuilder<CommandSourceStack> potential = Commands.literal("potential").
+            then(Commands.argument("value", IntegerArgumentType.integer()).
+                executes(ctx -> setPotential(ctx.getSource().getPlayerOrException(), IntegerArgumentType.getInteger(ctx, "value"))));
 
         dispatcher.register(baseLiteral.then(gearDebug.
             then(legendary).
             then(rarity).
             then(model).
+            then(potential).
             then(repair.then(breakGear).then(fixGear).then(setSlots))));
+    }
+
+
+    private static int setPotential(ServerPlayer player, int value)
+    {
+        ItemStack mainHandItem = player.getMainHandItem();
+
+        if (!(mainHandItem.getItem() instanceof VaultGearItem))
+        {
+            player.sendMessage(new TextComponent("No vaultgear held in hand"), net.minecraft.Util.NIL_UUID);
+            throw new IllegalArgumentException("Not vaultgear in hand");
+        }
+
+        VaultGearData data = VaultGearData.read(mainHandItem);
+
+        if (data.getState() != VaultGearState.IDENTIFIED)
+        {
+            player.sendMessage(new TextComponent("Only identified gear can change its potential."),
+                net.minecraft.Util.NIL_UUID);
+            throw new IllegalArgumentException("Not identified vaultgear in hand");
+        }
+
+        int oldPotential = data.getFirstValue(ModGearAttributes.CRAFTING_POTENTIAL).orElse(0);
+
+        data.updateAttribute(ModGearAttributes.CRAFTING_POTENTIAL, value);
+        data.write(mainHandItem);
+
+        Util.sendGodMessageToPlayer(player,
+            new TextComponent("Your crafting potential for this gear piece changed from " + oldPotential + " to " + value + "!").
+                withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
+
+        return 1;
     }
 
 

@@ -186,7 +186,7 @@ public class CrystalCommand
         data.setLayout(layout);
         data.write(mainHandItem);
 
-        player.sendMessage(new TextComponent("Crystal theme changed"), Util.NIL_UUID);
+        player.sendMessage(new TextComponent("Crystal layout changed"), Util.NIL_UUID);
 
         return 1;
     }

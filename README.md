@@ -86,4 +86,8 @@ Gear Debug commands:
 - `/the_vault_extra gear_debug removeModifier <affix> [<modifier>]` - removes modifier from given affix.
 
 
+### Note:
+Not all gear modifiers can be added. Some of them requires too many input fields, like Effect Clouds. The issue is with chat input size, as it is too small to write all required text.
+
+
 

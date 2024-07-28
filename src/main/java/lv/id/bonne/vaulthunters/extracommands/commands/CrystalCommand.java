@@ -9,20 +9,25 @@ package lv.id.bonne.vaulthunters.extracommands.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 
-import iskallia.vault.core.vault.Vault;
-import iskallia.vault.core.vault.player.Completion;
-import iskallia.vault.core.vault.player.Listener;
-import iskallia.vault.core.vault.stat.StatCollector;
-import iskallia.vault.gear.item.VaultGearItem;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import iskallia.vault.core.data.key.ThemeKey;
+import iskallia.vault.core.vault.VaultRegistry;
 import iskallia.vault.item.crystal.CrystalData;
 import iskallia.vault.item.crystal.VaultCrystalItem;
 import iskallia.vault.item.crystal.objective.*;
-import iskallia.vault.world.data.ServerVaults;
+import iskallia.vault.item.crystal.theme.ValueCrystalTheme;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.server.command.EnumArgument;
@@ -30,6 +35,12 @@ import net.minecraftforge.server.command.EnumArgument;
 
 public class CrystalCommand
 {
+    private static final SuggestionProvider<CommandSourceStack> SUGGEST_THEME = ((context, builder) ->
+        SharedSuggestionProvider.suggest(
+            generateThemeSuggestions(context),
+            builder));
+
+
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher)
     {
         LiteralArgumentBuilder<CommandSourceStack> baseLiteral = Commands.literal("the_vault_extra").
@@ -40,9 +51,13 @@ public class CrystalCommand
             then(Commands.argument("objective", EnumArgument.enumArgument(Objective.class)).
                 executes(ctx -> setObjective(ctx.getSource().getPlayerOrException(), ctx.getArgument("objective", Objective.class))));
 
-        dispatcher.register(baseLiteral.then(crystalLiteral.then(objective)));
-    }
+        LiteralArgumentBuilder<CommandSourceStack> theme = Commands.literal("setTheme").
+            then(Commands.argument("theme", ResourceLocationArgument.id()).
+                suggests(SUGGEST_THEME).
+                executes(ctx -> setTheme(ctx.getSource().getPlayerOrException(), ResourceLocationArgument.getId(ctx, "theme"))));
 
+        dispatcher.register(baseLiteral.then(crystalLiteral.then(objective).then(theme)));
+    }
 
 
     private static int setObjective(ServerPlayer player, Objective objective)
@@ -57,9 +72,41 @@ public class CrystalCommand
 
         CrystalData data = CrystalData.read(mainHandItem);
         data.setObjective(objective.getObjective());
-
         data.write(mainHandItem);
+
+        player.sendMessage(new TextComponent("Crystal objective changed"), net.minecraft.Util.NIL_UUID);
+
         return 1;
+    }
+
+
+    private static int setTheme(ServerPlayer player, ResourceLocation theme)
+    {
+        ItemStack mainHandItem = player.getMainHandItem();
+
+        if (!(mainHandItem.getItem() instanceof VaultCrystalItem))
+        {
+            player.sendMessage(new TextComponent("No crystal held in hand"), net.minecraft.Util.NIL_UUID);
+            throw new IllegalArgumentException("Not crystal in hand");
+        }
+
+        CrystalData data = CrystalData.read(mainHandItem);
+        data.setTheme(new ValueCrystalTheme(theme));
+        data.write(mainHandItem);
+
+        player.sendMessage(new TextComponent("Crystal theme changed"), net.minecraft.Util.NIL_UUID);
+
+        return 1;
+    }
+
+
+    private static List<String> generateThemeSuggestions(CommandContext<CommandSourceStack> context)
+        throws CommandSyntaxException
+    {
+        return VaultRegistry.THEME.getKeys().stream().
+            map(ThemeKey::getId).
+            map(ResourceLocation::toString).
+            collect(Collectors.toList());
     }
 
 

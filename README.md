@@ -87,7 +87,7 @@ Gear Debug commands:
 
 Crystal Commands:
 - `/the_vault_extra crystal setObjective <Objective>` - sets objective to a crystal in player hands.
-- 
+- `/the_vault_extra crystal setTheme <Theme>` - sets theme to a crystal in player hands.
 
 ### Note:
 Not all gear modifiers can be added. Some of them requires too many input fields, like Effect Clouds. The issue is with chat input size, as it is too small to write all required text.

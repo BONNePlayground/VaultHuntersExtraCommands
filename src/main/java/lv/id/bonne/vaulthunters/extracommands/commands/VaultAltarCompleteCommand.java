@@ -15,6 +15,7 @@ import iskallia.vault.altar.AltarInfusionRecipe;
 import iskallia.vault.altar.RequiredItems;
 import iskallia.vault.block.entity.VaultAltarTileEntity;
 import iskallia.vault.world.data.PlayerVaultAltarData;
+import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
 import lv.id.bonne.vaulthunters.extracommands.util.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -32,7 +33,7 @@ public class VaultAltarCompleteCommand
      */
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher)
     {
-        LiteralArgumentBuilder<CommandSourceStack> baseLiteral = Commands.literal("the_vault_extra").
+        LiteralArgumentBuilder<CommandSourceStack> baseLiteral = Commands.literal(ExtraCommands.CONFIGURATION.getCommandTag()).
             requires(stack -> stack.hasPermission(1));
         LiteralArgumentBuilder<CommandSourceStack> mainLiteral = Commands.literal("altar");
 

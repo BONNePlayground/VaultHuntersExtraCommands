@@ -80,7 +80,7 @@ public class ModelUnlockCommand
      */
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher)
     {
-        LiteralArgumentBuilder<CommandSourceStack> baseLiteral = Commands.literal("the_vault_extra").
+        LiteralArgumentBuilder<CommandSourceStack> baseLiteral = Commands.literal(ExtraCommands.CONFIGURATION.getCommandTag()).
             requires(stack -> stack.hasPermission(1));
 
         LiteralArgumentBuilder<CommandSourceStack> discovery = Commands.literal("discovery");

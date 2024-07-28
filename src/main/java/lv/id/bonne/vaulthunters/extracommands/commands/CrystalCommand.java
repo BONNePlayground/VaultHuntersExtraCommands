@@ -24,6 +24,7 @@ import iskallia.vault.item.crystal.VaultCrystalItem;
 import iskallia.vault.item.crystal.layout.*;
 import iskallia.vault.item.crystal.objective.*;
 import iskallia.vault.item.crystal.theme.ValueCrystalTheme;
+import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
 import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -47,7 +48,7 @@ public class CrystalCommand
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher)
     {
-        LiteralArgumentBuilder<CommandSourceStack> baseLiteral = Commands.literal("the_vault_extra").
+        LiteralArgumentBuilder<CommandSourceStack> baseLiteral = Commands.literal(ExtraCommands.CONFIGURATION.getCommandTag()).
             requires(stack -> stack.hasPermission(1));
         LiteralArgumentBuilder<CommandSourceStack> crystalLiteral = Commands.literal("crystal");
 

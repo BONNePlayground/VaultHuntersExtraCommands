@@ -179,6 +179,12 @@ public class Configuration
 
         builder.push("Command Section");
 
+        this.mainCommandTag =
+            builder.comment("This option allows to change the main command tag.").
+                comment("Changing value requires server restart.").
+                comment("Default value is: the_vault_extra").
+                define("commandTag", "the_vault_extra");
+
         this.pauseAblePlayers =
             builder.comment("List of UUID's that can run `/pause` command in the vault that tick-freezes it.").
                defineList("pauseUUID", Collections.emptyList(), o -> o instanceof String);
@@ -186,6 +192,12 @@ public class Configuration
         builder.pop();
 
         Configuration.GENERAL_SPEC = builder.build();
+    }
+
+
+    public String getCommandTag()
+    {
+        return this.mainCommandTag.get();
     }
 
 
@@ -328,9 +340,14 @@ public class Configuration
     private final ForgeConfigSpec.ConfigValue<List<? extends String>> pylonEffects;
 
     /**
-     * The config value for listing pylon effects
+     * The config value for listing players who can run pause command
      */
     private final ForgeConfigSpec.ConfigValue<List<? extends String>> pauseAblePlayers;
+
+    /**
+     * The config value for changing main command tag.
+     */
+    private final ForgeConfigSpec.ConfigValue<String> mainCommandTag;
 
     /**
      * The general config spec.

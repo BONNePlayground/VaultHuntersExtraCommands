@@ -90,6 +90,17 @@ Crystal Commands:
 - `/the_vault_extra crystal setTheme <Theme>` - sets theme to a crystal in player hands.
 - `/the_vault_extra crystal setLayout <layout> [<tunnelLength> <radius> <rotation>]` - sets layout to a crystal in player hands. Some layouts require extra parameters.
 
+### Configuration
+The configuration file allows to:
+- change the base command tag (`the_vault_extra`). Setting it to `the_vault` will merge commands. 
+- list of player uuids that can run `/pause` command.
+- list of positive modifiers
+- list of negative modifiers
+- list of curse modifiers
+- list of chaos modifiers
+- list of pylon effects
+- blacklist of modifiers that can not be added.
+
 ### Note:
 Not all gear modifiers can be added. Some of them requires too many input fields, like Effect Clouds. The issue is with chat input size, as it is too small to write all required text.
 

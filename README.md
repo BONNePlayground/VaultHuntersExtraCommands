@@ -81,5 +81,9 @@ Gear Debug commands:
 - `/the_vault_extra gear_debug rarity <rarity>` - sets gear piece rarity. (this is only display thing)
 - `/the_vault_extra gear_debug model <model>` - sets gear piece model
 - `/the_vault_extra gear_debug potential <number>` - sets gear piece crafting potential value 
+- `/the_vault_extra gear_debug addModifier <affix> [<modifier> <value> <number>]` - adds modifier with given value to affix type. This method does not bypass limits.
+- `/the_vault_extra gear_debug addModifierForce <affix> [<modifier> <value> <number>]` - adds modifier with given value to affix type. This method bypass limits.
+
+
 
 

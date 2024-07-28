@@ -23,7 +23,8 @@
     "PlayerStatsDataAccessor",
     "PlayerVaultStatsDataAccessor",
     "ProgressConfiguredTaskAccessor",
-    "VaultAltarTileEntityAccessor"
+    "VaultAltarTileEntityAccessor",
+    "VaultGearTierConfigAccessor"
   ],
   "client": []
 }

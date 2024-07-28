@@ -9,12 +9,14 @@ package lv.id.bonne.vaulthunters.extracommands.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import iskallia.vault.config.gear.VaultGearTierConfig;
 import iskallia.vault.dynamodel.registry.DynamicModelRegistry;
@@ -22,25 +24,36 @@ import iskallia.vault.gear.GearRollHelper;
 import iskallia.vault.gear.VaultGearModifierHelper;
 import iskallia.vault.gear.VaultGearRarity;
 import iskallia.vault.gear.VaultGearState;
+import iskallia.vault.gear.attribute.VaultGearAttribute;
+import iskallia.vault.gear.attribute.VaultGearAttributeRegistry;
 import iskallia.vault.gear.attribute.VaultGearModifier;
+import iskallia.vault.gear.attribute.ability.AbilityLevelAttribute;
+import iskallia.vault.gear.attribute.config.*;
+import iskallia.vault.gear.attribute.custom.EffectAvoidanceGearAttribute;
 import iskallia.vault.gear.data.VaultGearData;
 import iskallia.vault.gear.item.VaultGearItem;
+import iskallia.vault.init.ModConfigs;
 import iskallia.vault.init.ModDynamicModels;
 import iskallia.vault.init.ModGearAttributes;
+import iskallia.vault.skill.base.Skill;
+import iskallia.vault.skill.base.SpecializedSkill;
 import iskallia.vault.world.data.DiscoveredModelsData;
+import lv.id.bonne.vaulthunters.extracommands.mixin.VaultGearTierConfigAccessor;
 import lv.id.bonne.vaulthunters.extracommands.util.Util;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Tuple;
-import net.minecraft.world.item.Item;
+import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.server.command.EnumArgument;
 
 
@@ -49,6 +62,16 @@ public class GearDebugCommand
     private static final SuggestionProvider<CommandSourceStack> SUGGEST_MODEL = ((context, builder) ->
         SharedSuggestionProvider.suggest(
             generateSuggestions(context),
+            builder));
+
+    private static final SuggestionProvider<CommandSourceStack> SUGGEST_ATTRIBUTES = ((context, builder) ->
+        SharedSuggestionProvider.suggest(
+            generateAttributesSuggestions(context),
+            builder));
+
+    private static final SuggestionProvider<CommandSourceStack> SUGGEST_VALUES = ((context, builder) ->
+        SharedSuggestionProvider.suggest(
+            generateAttributeValuesSuggestions(context),
             builder));
 
 
@@ -68,6 +91,81 @@ public class GearDebugCommand
                 filter(resource -> !discoveredModels.contains(resource)).
                 map(ResourceLocation::toString).toList()).
             orElse(Collections.emptyList());
+    }
+
+
+    private static List<String> generateAttributesSuggestions(CommandContext<CommandSourceStack> context)
+        throws CommandSyntaxException
+    {
+        ServerPlayer player = context.getSource().getPlayerOrException();
+        VaultGearModifier.AffixType affix = context.getArgument("affix", VaultGearModifier.AffixType.class);
+
+        Optional<VaultGearTierConfig> config = VaultGearTierConfig.getConfig(player.getMainHandItem());
+
+        if (config.isPresent())
+        {
+            VaultGearTierConfig vaultGearTierConfig = config.get();
+
+            VaultGearTierConfig.ModifierAffixTagGroup affixGroup =
+                VaultGearTierConfig.ModifierAffixTagGroup.ofAffixType(affix);
+
+            VaultGearTierConfig.AttributeGroup attributeGroup =
+                ((VaultGearTierConfigAccessor) vaultGearTierConfig).getModifierGroup().get(affixGroup);
+
+            return attributeGroup.stream().
+                map(VaultGearTierConfig.ModifierTierGroup::getAttribute).
+                map(ResourceLocation::toString).
+                collect(Collectors.toList());
+        }
+        else
+        {
+            // Return every known attribute
+            return VaultGearAttributeRegistry.getRegistry().getKeys().stream().
+                map(ResourceLocation::toString).
+                collect(Collectors.toList());
+        }
+    }
+
+
+    private static List<String> generateAttributeValuesSuggestions(CommandContext<CommandSourceStack> context)
+        throws CommandSyntaxException
+    {
+        ResourceLocation modifier = ResourceLocationArgument.getId(context, "modifier");
+
+        VaultGearAttribute<?> attribute = VaultGearAttributeRegistry.getAttribute(modifier);
+
+        List<String> returnText = new ArrayList<>();
+
+        if (attribute.getGenerator() instanceof FloatAttributeGenerator)
+        {
+            returnText.add("<float>");
+        }
+        else if (attribute.getGenerator() instanceof IntegerAttributeGenerator)
+        {
+            returnText.add("<integer>");
+        }
+        else if (attribute.getGenerator() instanceof DoubleAttributeGenerator)
+        {
+            returnText.add("<double>");
+        }
+        else if (attribute.getGenerator() instanceof BooleanFlagGenerator)
+        {
+            returnText.add("<boolean>");
+        }
+        else if (attribute.getGenerator() instanceof IdentityObjectGenerator<?>)
+        {
+            returnText.add("<text>");
+        }
+        else if (attribute.getGenerator().getClass().getName().equals("iskallia.vault.gear.attribute.custom.EffectAvoidanceGearAttribute$Generator"))
+        {
+            ForgeRegistries.MOB_EFFECTS.getKeys().forEach(key -> returnText.add("\"" + key.toString() + "\""));
+        }
+        else if (attribute.getGenerator().getClass().getName().equals("iskallia.vault.gear.attribute.ability.AbilityLevelAttribute$1"))
+        {
+            returnText.addAll(abilityIDs());
+        }
+
+        return returnText;
     }
 
 
@@ -108,13 +206,218 @@ public class GearDebugCommand
         LiteralArgumentBuilder<CommandSourceStack> potential = Commands.literal("potential").
             then(Commands.argument("value", IntegerArgumentType.integer()).
                 executes(ctx -> setPotential(ctx.getSource().getPlayerOrException(), IntegerArgumentType.getInteger(ctx, "value"))));
+        //Add Modifier
+        LiteralArgumentBuilder<CommandSourceStack> addModifier = Commands.literal("addModifier").
+            then(Commands.argument("affix", EnumArgument.enumArgument(VaultGearModifier.AffixType.class)).
+                executes(ctx -> addModifier(ctx.getSource().getPlayerOrException(),
+                    false,
+                    ctx.getArgument("affix", VaultGearModifier.AffixType.class), null)).
+                then(Commands.argument("modifier", ResourceLocationArgument.id()).
+                    suggests(SUGGEST_ATTRIBUTES).
+                    then(Commands.argument("value_1", StringArgumentType.string()).
+                        suggests(SUGGEST_VALUES).
+                        executes(ctx -> addModifier(ctx.getSource().getPlayerOrException(),
+                            false,
+                            ctx.getArgument("affix", VaultGearModifier.AffixType.class),
+                            ResourceLocationArgument.getId(ctx, "modifier"),
+                            StringArgumentType.getString(ctx, "value_1"))).
+                        then(Commands.argument("number", StringArgumentType.string()).
+                            executes(ctx -> addModifier(ctx.getSource().getPlayerOrException(),
+                                false,
+                                ctx.getArgument("affix", VaultGearModifier.AffixType.class),
+                                ResourceLocationArgument.getId(ctx, "modifier"),
+                                StringArgumentType.getString(ctx, "value_1"),
+                                StringArgumentType.getString(ctx, "number")))
+                        )
+                    )
+                )
+            );
+        //Add Modifier by force
+        LiteralArgumentBuilder<CommandSourceStack> addModifierBypass = Commands.literal("addModifierForce").
+            then(Commands.argument("affix", EnumArgument.enumArgument(VaultGearModifier.AffixType.class)).
+                executes(ctx -> addModifier(ctx.getSource().getPlayerOrException(),
+                    true,
+                    ctx.getArgument("affix", VaultGearModifier.AffixType.class), null)).
+                then(Commands.argument("modifier", ResourceLocationArgument.id()).
+                    suggests(SUGGEST_ATTRIBUTES).
+                    then(Commands.argument("value_1", StringArgumentType.string()).
+                        suggests(SUGGEST_VALUES).
+                        executes(ctx -> addModifier(ctx.getSource().getPlayerOrException(),
+                            true,
+                            ctx.getArgument("affix", VaultGearModifier.AffixType.class),
+                            ResourceLocationArgument.getId(ctx, "modifier"),
+                            StringArgumentType.getString(ctx, "value_1"))).
+                        then(Commands.argument("number", StringArgumentType.string()).
+                            executes(ctx -> addModifier(ctx.getSource().getPlayerOrException(),
+                                true,
+                                ctx.getArgument("affix", VaultGearModifier.AffixType.class),
+                                ResourceLocationArgument.getId(ctx, "modifier"),
+                                StringArgumentType.getString(ctx, "value_1"),
+                                StringArgumentType.getString(ctx, "number")))
+                        )
+                    )
+                )
+            );
 
         dispatcher.register(baseLiteral.then(gearDebug.
             then(legendary).
             then(rarity).
             then(model).
             then(potential).
+            then(addModifier).
+            then(addModifierBypass).
             then(repair.then(breakGear).then(fixGear).then(setSlots))));
+    }
+
+
+    private static int addModifier(ServerPlayer player,
+        boolean byPassLimit,
+        VaultGearModifier.AffixType type,
+        ResourceLocation modifier,
+        String... value)
+    {
+        ItemStack mainHandItem = player.getMainHandItem();
+
+        if (!(mainHandItem.getItem() instanceof VaultGearItem))
+        {
+            player.sendMessage(new TextComponent("No vaultgear held in hand"), net.minecraft.Util.NIL_UUID);
+            throw new IllegalArgumentException("Not vaultgear in hand");
+        }
+
+        VaultGearData data = VaultGearData.read(mainHandItem);
+
+        if (data.getState() != VaultGearState.IDENTIFIED)
+        {
+            player.sendMessage(new TextComponent("Only identified gear can change its attributes."),
+                net.minecraft.Util.NIL_UUID);
+            throw new IllegalArgumentException("Not identified vaultgear in hand");
+        }
+
+        if (modifier == null)
+        {
+            if (type == VaultGearModifier.AffixType.IMPLICIT)
+            {
+                player.sendMessage(new TextComponent("Only identified gear can change its attributes."),
+                    net.minecraft.Util.NIL_UUID);
+                throw new IllegalArgumentException("You cannot add implicits");
+            }
+
+            VaultGearModifierHelper.generateModifiersOfAffix(mainHandItem, type, new Random());
+            return 1;
+        }
+
+        if (!byPassLimit)
+        {
+            if (type == VaultGearModifier.AffixType.IMPLICIT)
+            {
+                player.sendMessage(new TextComponent("Cannot add more implicits!"),
+                    net.minecraft.Util.NIL_UUID);
+                return 0;
+            }
+            else if (type == VaultGearModifier.AffixType.PREFIX && !VaultGearModifierHelper.hasOpenPrefix(mainHandItem))
+            {
+                player.sendMessage(new TextComponent("Cannot add more prefixes!"),
+                    net.minecraft.Util.NIL_UUID);
+                return 0;
+            }
+            else if (type == VaultGearModifier.AffixType.SUFFIX && !VaultGearModifierHelper.hasOpenSuffix(mainHandItem))
+            {
+                player.sendMessage(new TextComponent("Cannot add more suffixes!"),
+                    net.minecraft.Util.NIL_UUID);
+                return 0;
+            }
+        }
+
+        VaultGearAttribute<?> attribute = VaultGearAttributeRegistry.getAttribute(modifier);
+
+        if (attribute == null)
+        {
+            throw new IllegalArgumentException("Unknown attribute: " + modifier);
+        }
+
+        boolean added;
+
+        if (attribute.getGenerator() instanceof FloatAttributeGenerator)
+        {
+            added = data.addModifier(type, new VaultGearModifier<>((VaultGearAttribute<Float>) attribute, Float.parseFloat(value[0])));
+        }
+        else if (attribute.getGenerator() instanceof IntegerAttributeGenerator)
+        {
+            added = data.addModifier(type, new VaultGearModifier<>((VaultGearAttribute<Integer>) attribute, Integer.parseInt(value[0])));
+        }
+        else if (attribute.getGenerator() instanceof DoubleAttributeGenerator)
+        {
+            added = data.addModifier(type, new VaultGearModifier<>((VaultGearAttribute<Double>) attribute, Double.parseDouble(value[0])));
+        }
+        else if (attribute.getGenerator() instanceof BooleanFlagGenerator)
+        {
+            added = data.addModifier(type, new VaultGearModifier<>((VaultGearAttribute<Boolean>) attribute, Boolean.parseBoolean(value[0])));
+        }
+        else if (attribute.getGenerator() instanceof IdentityObjectGenerator<?>)
+        {
+            added = data.addModifier(type, new VaultGearModifier<>((VaultGearAttribute<String>) attribute, value[0]));
+        }
+        else if (attribute.getGenerator().getClass().getName().equals("iskallia.vault.gear.attribute.custom.EffectAvoidanceGearAttribute$Generator"))
+        {
+            // Because that is how true coders does it :D
+            String[] split = value[0].split(":");
+
+            if (split.length != 2)
+            {
+                throw new IllegalArgumentException("Could not get the correct mob effect. The format example: \"minecraft:slowness\"");
+            }
+
+            ResourceLocation resourceLocation = new ResourceLocation(split[0] + ":" + split[1]);
+            float chance = Float.parseFloat(value[1]);
+
+            MobEffect mobEffect = Registry.MOB_EFFECT.get(resourceLocation);
+            EffectAvoidanceGearAttribute effectAttribute = new EffectAvoidanceGearAttribute(mobEffect, chance);
+
+            added = data.addModifier(type, new VaultGearModifier<>((VaultGearAttribute<EffectAvoidanceGearAttribute>) attribute, effectAttribute));
+        }
+        else if (attribute.getGenerator().getClass().getName().equals("iskallia.vault.gear.attribute.ability.AbilityLevelAttribute$1"))
+        {
+            if (!abilityIDs().contains(value[0]))
+            {
+                throw new IllegalArgumentException("Could not get the correct ability name. Check if you wrote it correctly!");
+            }
+
+            AbilityLevelAttribute abilityAttribute = new AbilityLevelAttribute(value[0], Integer.parseInt(value[1]));
+
+            added = data.addModifier(type, new VaultGearModifier<>((VaultGearAttribute<AbilityLevelAttribute>) attribute, abilityAttribute));
+        }
+        else
+        {
+            throw new IllegalArgumentException("I do not know how to add it. Ask BONNe to add it!!! " + modifier.toString());
+        }
+
+        if (added)
+        {
+            data.write(mainHandItem);
+
+            Util.sendGodMessageToPlayer(player,
+                new TextComponent("Your blessing has worked. Modifier has been added to your gear!").
+                    withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
+        }
+        else
+        {
+            Util.sendGodMessageToPlayer(player,
+                new TextComponent("I could not add this modifier. Are you sure you pick correct modifier?").
+                    withStyle(Style.EMPTY.withColor(ChatFormatting.RED)));
+        }
+
+        return 1;
+    }
+
+
+    private static Set<String> abilityIDs()
+    {
+        return ModConfigs.ABILITIES.get().orElseThrow().skills.stream().
+            filter(skill -> skill instanceof SpecializedSkill).
+            map(skill -> (SpecializedSkill) skill).
+            flatMap(spec -> spec.getSpecializations().stream()).
+            map(Skill::getId).
+            collect(Collectors.toSet());
     }
 
 

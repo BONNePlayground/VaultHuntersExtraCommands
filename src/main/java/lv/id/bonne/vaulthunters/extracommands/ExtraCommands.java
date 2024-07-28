@@ -57,6 +57,7 @@ public class ExtraCommands
             WorkbenchUnlockCommand.register(event.getDispatcher());
             LocateAngelBlockCommand.register(event.getDispatcher());
             GearDebugCommand.register(event.getDispatcher());
+            CrystalCommand.register(event.getDispatcher());
         }
     }
 

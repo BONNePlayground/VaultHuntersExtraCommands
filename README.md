@@ -83,7 +83,7 @@ Gear Debug commands:
 - `/the_vault_extra gear_debug potential <number>` - sets gear piece crafting potential value 
 - `/the_vault_extra gear_debug addModifier <affix> [<modifier> <value> <number>]` - adds modifier with given value to affix type. This method does not bypass limits.
 - `/the_vault_extra gear_debug addModifierForce <affix> [<modifier> <value> <number>]` - adds modifier with given value to affix type. This method bypass limits.
-
+- `/the_vault_extra gear_debug removeModifier <affix> [<modifier>]` - removes modifier from given affix.
 
 
 

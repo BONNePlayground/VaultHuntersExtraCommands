@@ -37,6 +37,7 @@ import iskallia.vault.init.ModDynamicModels;
 import iskallia.vault.init.ModGearAttributes;
 import iskallia.vault.skill.base.Skill;
 import iskallia.vault.skill.base.SpecializedSkill;
+import iskallia.vault.util.MiscUtils;
 import iskallia.vault.world.data.DiscoveredModelsData;
 import lv.id.bonne.vaulthunters.extracommands.mixin.VaultGearTierConfigAccessor;
 import lv.id.bonne.vaulthunters.extracommands.util.Util;
@@ -54,6 +55,7 @@ import net.minecraft.util.Tuple;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.ForgeRegistryEntry;
 import net.minecraftforge.server.command.EnumArgument;
 
 
@@ -74,6 +76,10 @@ public class GearDebugCommand
             generateAttributeValuesSuggestions(context),
             builder));
 
+    private static final SuggestionProvider<CommandSourceStack> SUGGEST_EXISTING_MODIFIERS = ((context, builder) ->
+        SharedSuggestionProvider.suggest(
+            generateExistingModifiersSuggestions(context),
+            builder));
 
     private static List<String> generateSuggestions(CommandContext<CommandSourceStack> context)
         throws CommandSyntaxException
@@ -169,6 +175,40 @@ public class GearDebugCommand
     }
 
 
+    private static List<String> generateExistingModifiersSuggestions(CommandContext<CommandSourceStack> context)
+        throws CommandSyntaxException
+    {
+        ServerPlayer player = context.getSource().getPlayerOrException();
+        VaultGearModifier.AffixType affix = context.getArgument("affix", VaultGearModifier.AffixType.class);
+
+        VaultGearData data = VaultGearData.read(player.getMainHandItem());
+
+        if (data.getState() != VaultGearState.IDENTIFIED)
+        {
+            return Collections.emptyList();
+        }
+
+        List<String> returnList = new ArrayList<>();
+
+        for (VaultGearModifier<?> modifier : data.getModifiers(affix))
+        {
+            VaultGearAttribute<?> attribute = modifier.getAttribute();
+
+            if (attribute != null)
+            {
+                ResourceLocation registryName = attribute.getRegistryName();
+
+                if (registryName != null)
+                {
+                    returnList.add(registryName.toString());
+                }
+            }
+        }
+
+        return returnList;
+    }
+
+
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher)
     {
         LiteralArgumentBuilder<CommandSourceStack> baseLiteral = Commands.literal("the_vault_extra").
@@ -258,6 +298,17 @@ public class GearDebugCommand
                     )
                 )
             );
+        //Add Modifier
+        LiteralArgumentBuilder<CommandSourceStack> removeModifier = Commands.literal("removeModifier").
+            then(Commands.argument("affix", EnumArgument.enumArgument(VaultGearModifier.AffixType.class)).
+                executes(ctx -> removeModifier(ctx.getSource().getPlayerOrException(), ctx.getArgument("affix", VaultGearModifier.AffixType.class), null)).
+                then(Commands.argument("modifier", ResourceLocationArgument.id()).
+                    suggests(SUGGEST_EXISTING_MODIFIERS).
+                    executes(ctx -> removeModifier(ctx.getSource().getPlayerOrException(),
+                        ctx.getArgument("affix", VaultGearModifier.AffixType.class),
+                        ResourceLocationArgument.getId(ctx, "modifier")))
+                )
+            );
 
         dispatcher.register(baseLiteral.then(gearDebug.
             then(legendary).
@@ -266,7 +317,68 @@ public class GearDebugCommand
             then(potential).
             then(addModifier).
             then(addModifierBypass).
+            then(removeModifier).
             then(repair.then(breakGear).then(fixGear).then(setSlots))));
+    }
+
+
+    private static int removeModifier(ServerPlayer player, VaultGearModifier.AffixType type, ResourceLocation resourceLocation)
+    {
+        ItemStack mainHandItem = player.getMainHandItem();
+
+        if (!(mainHandItem.getItem() instanceof VaultGearItem))
+        {
+            player.sendMessage(new TextComponent("No vaultgear held in hand"), net.minecraft.Util.NIL_UUID);
+            throw new IllegalArgumentException("Not vaultgear in hand");
+        }
+
+        VaultGearData data = VaultGearData.read(mainHandItem);
+
+        if (data.getState() != VaultGearState.IDENTIFIED)
+        {
+            player.sendMessage(new TextComponent("Only identified gear can change its attributes."),
+                net.minecraft.Util.NIL_UUID);
+            throw new IllegalArgumentException("Not identified vaultgear in hand");
+        }
+
+        if (resourceLocation == null)
+        {
+            List<VaultGearModifier<?>> modifiers = new ArrayList<>(data.getModifiers(type));
+            modifiers.removeIf(modifier -> !modifier.getCategory().isModifiableByArtisanFoci());
+
+            if (!modifiers.isEmpty())
+            {
+                VaultGearModifier<?> randomMod = MiscUtils.getRandomEntry(modifiers, new Random());
+                data.removeModifier(randomMod);
+                data.write(mainHandItem);
+
+                player.sendMessage(new TextComponent("The " + type.name() + " removed from gear"),
+                    net.minecraft.Util.NIL_UUID);
+            }
+        }
+        else
+        {
+            List<VaultGearModifier<?>> modifiers = new ArrayList<>(data.getModifiers(type));
+            modifiers.removeIf(modifier -> modifier.getAttribute() == null ||
+                !resourceLocation.equals(modifier.getAttribute().getRegistryName()));
+
+            if (!modifiers.isEmpty())
+            {
+                VaultGearModifier<?> randomMod = MiscUtils.getRandomEntry(modifiers, new Random());
+                data.removeModifier(randomMod);
+                data.write(mainHandItem);
+
+                player.sendMessage(new TextComponent("The " + type.name() + " removed from gear"),
+                    net.minecraft.Util.NIL_UUID);
+            }
+            else
+            {
+                player.sendMessage(new TextComponent("Cannot find " + resourceLocation + " in " + type.name()),
+                    net.minecraft.Util.NIL_UUID);
+            }
+        }
+
+        return 1;
     }
 
 

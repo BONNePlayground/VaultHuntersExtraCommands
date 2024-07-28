@@ -103,5 +103,5 @@ The configuration file allows to:
 
 ### Note:
 Not all gear modifiers can be added. Some of them requires too many input fields, like Effect Clouds. The issue is with chat input size, as it is too small to write all required text.
-
-
+Commands can be executed by console (requires <player> to be filled) or by OP (server operator). (except /pause)
+Commands have auto-complete, but they are available only if the mod is installed on the client side (due to how Minecraft commands work).

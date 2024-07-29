@@ -56,7 +56,6 @@ import net.minecraft.util.Tuple;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.ForgeRegistryEntry;
 import net.minecraftforge.server.command.EnumArgument;
 
 
@@ -483,7 +482,7 @@ public class GearDebugCommand
             ResourceLocation resourceLocation = new ResourceLocation(split[0] + ":" + split[1]);
             float chance = Float.parseFloat(value[1]);
 
-            MobEffect mobEffect = Registry.MOB_EFFECT.get(resourceLocation);
+            MobEffect mobEffect = ForgeRegistries.MOB_EFFECTS.getValue(resourceLocation);
             EffectAvoidanceGearAttribute effectAttribute = new EffectAvoidanceGearAttribute(mobEffect, chance);
 
             added = data.addModifier(type, new VaultGearModifier<>((VaultGearAttribute<EffectAvoidanceGearAttribute>) attribute, effectAttribute));

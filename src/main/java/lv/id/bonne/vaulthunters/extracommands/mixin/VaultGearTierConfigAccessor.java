@@ -15,9 +15,9 @@ import java.util.Map;
 import iskallia.vault.config.gear.VaultGearTierConfig;
 
 
-@Mixin(VaultGearTierConfig.class)
+@Mixin(value = VaultGearTierConfig.class, remap = false)
 public interface VaultGearTierConfigAccessor
 {
-    @Accessor
+    @Accessor("modifierGroup")
     Map<VaultGearTierConfig.ModifierAffixTagGroup, VaultGearTierConfig.AttributeGroup> getModifierGroup();
 }

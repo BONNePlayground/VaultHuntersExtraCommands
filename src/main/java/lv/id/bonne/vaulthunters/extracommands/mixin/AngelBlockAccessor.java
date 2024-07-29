@@ -15,7 +15,7 @@ import java.util.Set;
 import iskallia.vault.block.AngelBlock;
 
 
-@Mixin(AngelBlock.class)
+@Mixin(value = AngelBlock.class, remap = false)
 public interface AngelBlockAccessor
 {
     @Accessor("angelBlocks")

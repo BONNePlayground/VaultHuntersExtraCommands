@@ -20,7 +20,7 @@ import lv.id.bonne.vaulthunters.extracommands.data.ExtraCommandsData;
 @Mixin(value = VirtualWorlds.class, remap = false)
 public class MixinVirtualWorlds
 {
-    @Inject(method = "deregister", at = @At("HEAD"))
+    @Inject(method = "deregister", at = @At("RETURN"))
     private static void removeFromSave(VirtualWorld world, CallbackInfoReturnable<VirtualWorld> cir)
     {
         ExtraCommandsData data = ExtraCommandsData.get(world);

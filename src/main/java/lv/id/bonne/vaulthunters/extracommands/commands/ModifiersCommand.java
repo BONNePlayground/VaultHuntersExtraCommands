@@ -23,6 +23,7 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -327,14 +328,20 @@ public class ModifiersCommand
                         component = new TextComponent("You are blessed with " + (count > 1 ? count + " " : "")).
                             withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)).
                             append(new TextComponent(effect.getDisplayName()).
-                                withStyle(Style.EMPTY.withColor(effect.getDisplayTextColor())));
+                                withStyle(style -> Style.EMPTY.
+                                    withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                        new TextComponent(effect.getDisplayDescription()))).
+                                    withColor(effect.getDisplayTextColor())));
                     }
                     else
                     {
                         component = new TextComponent("You are punished by adding " + (count > 1 ? count + " " : "")).
                             withStyle(Style.EMPTY.withColor(ChatFormatting.RED)).
                             append(new TextComponent(effect.getDisplayName()).
-                                withStyle(Style.EMPTY.withColor(effect.getDisplayTextColor())));
+                                withStyle(style -> Style.EMPTY.
+                                    withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                        new TextComponent(effect.getDisplayDescription()))).
+                                    withColor(effect.getDisplayTextColor())));
                     }
 
                     Util.sendGodMessageToAll(level, component);
@@ -355,14 +362,20 @@ public class ModifiersCommand
                             component = new TextComponent("You are blessed by removing " + (count > 1 ? count + " " : "")).
                                 withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)).
                                 append(new TextComponent(effect.getDisplayName()).
-                                    withStyle(Style.EMPTY.withColor(effect.getDisplayTextColor())));
+                                    withStyle(style -> Style.EMPTY.
+                                        withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                            new TextComponent(effect.getDisplayDescription()))).
+                                        withColor(effect.getDisplayTextColor())));
                         }
                         else
                         {
                             component = new TextComponent("You are punished by removing " + (count > 1 ? count + " " : "")).
                                 withStyle(Style.EMPTY.withColor(ChatFormatting.RED)).
                                 append(new TextComponent(effect.getDisplayName()).
-                                    withStyle(Style.EMPTY.withColor(effect.getDisplayTextColor())));
+                                    withStyle(style -> Style.EMPTY.
+                                        withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                            new TextComponent(effect.getDisplayDescription()))).
+                                        withColor(effect.getDisplayTextColor())));
                         }
 
                         Util.sendGodMessageToAll(level, component);

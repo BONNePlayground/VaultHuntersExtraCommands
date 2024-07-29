@@ -23,6 +23,7 @@ import iskallia.vault.world.data.PlayerPylons;
 import iskallia.vault.world.data.ServerVaults;
 import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
 import lv.id.bonne.vaulthunters.extracommands.util.Util;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -30,6 +31,8 @@ import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.NbtTagArgument;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerPlayer;
@@ -134,11 +137,16 @@ public class VaultPylonCommand
                 player.addEffect(new MobEffectInstance(effect, duration, 60, false, false, true));
             }
 
-            Util.sendGodMessageToPlayer(player,
-                new TextComponent("I have blessed you with ").
-                    append((new TextComponent(config.getDescription())).
-                        setStyle(Style.EMPTY.withColor(config.getColor()))).
-                    append(" Pylon!"));
+            MutableComponent message = new TextComponent("I have blessed you with ").
+                withStyle(ChatFormatting.WHITE).
+                append(((MutableComponent) effect.getDisplayName()).
+                    withStyle(style -> Style.EMPTY.
+                        withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                            new TextComponent(config.getDescription()))).
+                        withColor(config.getColor()))).
+                append(new TextComponent("!"));
+
+            Util.sendGodMessageToPlayer(player, message);
         }
 
         return 1;

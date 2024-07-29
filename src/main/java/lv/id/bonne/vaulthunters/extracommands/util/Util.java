@@ -121,17 +121,12 @@ public class Util
 
         randomGod.ifPresentOrElse(sender ->
         {
-            TextComponent senderTxt = new TextComponent("[VG] ");
+            TextComponent senderTxt = new TextComponent("");
+            senderTxt.append(Util.getGodMessage(sender));
+            senderTxt.append(new TextComponent(": ").withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
+            senderTxt.append(text);
 
-            senderTxt.withStyle(ChatFormatting.DARK_PURPLE).
-                append((new TextComponent(sender.getName())).withStyle(sender.getChatColor())).
-                append((new TextComponent(": ")).withStyle(ChatFormatting.WHITE));
-
-            senderTxt.withStyle(style ->
-                style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, sender.getHoverChatComponent())));
-
-            level.players().forEach(player -> player.sendMessage(
-                senderTxt.append(text), ChatType.SYSTEM, net.minecraft.Util.NIL_UUID));
+            level.players().forEach(player -> player.sendMessage(senderTxt, ChatType.SYSTEM, net.minecraft.Util.NIL_UUID));
         }, Util.logError("Could not find a valid god to send message."));
     }
 
@@ -156,16 +151,23 @@ public class Util
 
         randomGod.ifPresentOrElse(sender ->
         {
-            TextComponent senderTxt = new TextComponent("[VG] ");
+            TextComponent senderTxt = new TextComponent("");
+            senderTxt.append(Util.getGodMessage(sender));
+            senderTxt.append(new TextComponent(": ").withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
+            senderTxt.append(text);
 
-            senderTxt.withStyle(ChatFormatting.DARK_PURPLE).
-                append((new TextComponent(sender.getName())).withStyle(sender.getChatColor())).
-                append((new TextComponent(": ")).withStyle(ChatFormatting.WHITE));
-
-            senderTxt.withStyle(style ->
-                style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, sender.getHoverChatComponent())));
-
-            player.sendMessage(senderTxt.append(text), ChatType.SYSTEM, net.minecraft.Util.NIL_UUID);
+            player.sendMessage(senderTxt, ChatType.SYSTEM, net.minecraft.Util.NIL_UUID);
         }, Util.logError("Could not find a valid god to send message."));
+    }
+
+
+    private static MutableComponent getGodMessage(VaultGod god)
+    {
+        return new TextComponent("[VG] ").
+            append((new TextComponent(god.getName())).withStyle(god.getChatColor())).
+            withStyle(style -> style.
+                withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                    god.getHoverChatComponent())).
+                withColor(ChatFormatting.DARK_PURPLE));
     }
 }

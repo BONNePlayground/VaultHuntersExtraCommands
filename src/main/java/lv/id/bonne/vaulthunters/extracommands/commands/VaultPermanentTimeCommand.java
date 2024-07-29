@@ -75,17 +75,15 @@ public class VaultPermanentTimeCommand
                     value != null ? value + seconds : seconds);
             }
 
-            int extraSeconds = extraCommandsData.time.get(player.getUUID());
-
-            if (extraSeconds < 0)
+            if (seconds < 0)
             {
                 Util.sendGodMessageToPlayer(player,
-                    "You have been punished! I remove " + (-extraSeconds)  + " seconds from your all next vaults!");
+                    "You have been punished! I remove " + (-seconds)  + " seconds from your all next vaults!");
             }
             else
             {
                 Util.sendGodMessageToPlayer(player,
-                    "You have been blessed with extra " + extraSeconds  + " seconds for your all next vaults!");
+                    "You have been blessed with extra " + seconds  + " seconds for your all next vaults!");
             }
 
             extraCommandsData.setDirty();

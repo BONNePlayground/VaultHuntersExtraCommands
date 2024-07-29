@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import iskallia.vault.core.world.storage.VirtualWorld;
 import iskallia.vault.world.data.VirtualWorlds;
+import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
 import lv.id.bonne.vaulthunters.extracommands.data.ExtraCommandsData;
 
 
@@ -23,14 +24,22 @@ public class MixinVirtualWorlds
     @Inject(method = "deregister", at = @At("RETURN"))
     private static void removeFromSave(VirtualWorld world, CallbackInfoReturnable<VirtualWorld> cir)
     {
-        ExtraCommandsData data = ExtraCommandsData.get(world);
-
-        if (data != null)
+        try
         {
-            if (data.paused.remove(world.dimension().location()) != null)
+            ExtraCommandsData data = ExtraCommandsData.get(world);
+
+            if (data != null)
             {
-                data.setDirty();
+                if (data.paused.containsKey(world.dimension().location()))
+                {
+                    data.paused.remove(world.dimension().location());
+                    data.setDirty();
+                }
             }
+        }
+        catch (Exception e)
+        {
+            ExtraCommands.LOGGER.error("Could not remove paused level because: " + e.getMessage());
         }
     }
 }

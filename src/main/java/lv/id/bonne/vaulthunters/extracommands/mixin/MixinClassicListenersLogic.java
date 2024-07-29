@@ -17,6 +17,7 @@ import iskallia.vault.core.vault.player.ClassicListenersLogic;
 import iskallia.vault.core.vault.player.Listener;
 import iskallia.vault.core.vault.time.TickClock;
 import iskallia.vault.core.world.storage.VirtualWorld;
+import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
 import lv.id.bonne.vaulthunters.extracommands.data.ExtraCommandsData;
 
 
@@ -33,13 +34,22 @@ public class MixinClassicListenersLogic
     {
         ExtraCommandsData extraCommandsData = ExtraCommandsData.get(world);
 
-        if (extraCommandsData != null && extraCommandsData.time.containsKey(listener.get(Listener.ID)))
+        try
         {
-            int extraTicks = extraCommandsData.time.getOrDefault(listener.get(Listener.ID), 0) * 20;
+            if (extraCommandsData != null &&
+                listener.has(Listener.ID) &&
+                extraCommandsData.time.containsKey(listener.get(Listener.ID)))
+            {
+                int extraTicks = extraCommandsData.time.getOrDefault(listener.get(Listener.ID), 0) * 20;
 
-            vault.ifPresent(Vault.CLOCK, clock ->
-                clock.setIfPresent(TickClock.DISPLAY_TIME,
-                    clock.get(TickClock.DISPLAY_TIME) + extraTicks));
+                vault.ifPresent(Vault.CLOCK, clock ->
+                    clock.setIfPresent(TickClock.DISPLAY_TIME,
+                        clock.get(TickClock.DISPLAY_TIME) + extraTicks));
+            }
+        }
+        catch (Exception e)
+        {
+            ExtraCommands.LOGGER.error("Failed to change vault time because of: " + e.getMessage());
         }
     }
 }

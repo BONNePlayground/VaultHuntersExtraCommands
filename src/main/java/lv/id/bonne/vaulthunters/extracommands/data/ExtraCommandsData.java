@@ -9,6 +9,7 @@ package lv.id.bonne.vaulthunters.extracommands.data;
 
 import org.jetbrains.annotations.NotNull;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import net.minecraft.nbt.CompoundTag;
@@ -24,9 +25,9 @@ public class ExtraCommandsData extends SavedData
 {
     protected static final String DATA_NAME = "extra_commands_data";
 
-    public Map<ResourceLocation, Boolean> paused = new HashMap<>();
+    public Map<ResourceLocation, Boolean> paused = new ConcurrentHashMap<>();
 
-    public Map<UUID, Integer> time = new HashMap<>();
+    public Map<UUID, Integer> time = new ConcurrentHashMap<>();
 
     public ExtraCommandsData()
     {

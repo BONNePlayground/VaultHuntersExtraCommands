@@ -30,18 +30,18 @@ public class MixinVirtualWorld
         VirtualWorld world = ((VirtualWorld) (Object)this);
 
         ServerVaults.get(world).ifPresent(vault -> {
-            TickClock tickClock = vault.get(Vault.CLOCK);
-
-            if (tickClock.has(TickClock.PAUSED))
-            {
-                ExtraCommandsData extraCommandsData = ExtraCommandsData.get(world);
-
-                if (extraCommandsData != null &&
-                    extraCommandsData.paused.getOrDefault(world.dimension().location(), false))
+            vault.ifPresent(Vault.CLOCK, tickClock -> {
+                if (tickClock.has(TickClock.PAUSED))
                 {
-                    ci.cancel();
+                    ExtraCommandsData extraCommandsData = ExtraCommandsData.get(world);
+
+                    if (extraCommandsData != null &&
+                        extraCommandsData.paused.getOrDefault(world.dimension().location(), false))
+                    {
+                        ci.cancel();
+                    }
                 }
-            }
+            });
         });
     }
 }

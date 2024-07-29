@@ -69,11 +69,10 @@ public class KickCommand
                     listeners.remove(world, vault, listener);
 
                     vault.ifPresent(Vault.STATS, (collector) ->
-                    {
-                        StatCollector stats = collector.get(listener.get(Listener.ID));
-
-                        stats.set(StatCollector.COMPLETION, complete ? Completion.COMPLETED : Completion.BAILED);
-                    });
+                        listener.ifPresent(Listener.ID, id -> {
+                            StatCollector stats = collector.get(id);
+                            stats.set(StatCollector.COMPLETION, complete ? Completion.COMPLETED : Completion.BAILED);
+                        }));
                 });
             });
         }

@@ -14,11 +14,13 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import iskallia.vault.core.data.key.ThemeKey;
 import iskallia.vault.core.vault.VaultRegistry;
+import iskallia.vault.core.world.roll.IntRoll;
 import iskallia.vault.item.crystal.CrystalData;
 import iskallia.vault.item.crystal.VaultCrystalItem;
 import iskallia.vault.item.crystal.layout.*;
@@ -29,7 +31,10 @@ import net.minecraft.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.arguments.NbtTagArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -45,6 +50,11 @@ public class CrystalCommand
             generateThemeSuggestions(context),
             builder));
 
+    private static final SuggestionProvider<CommandSourceStack> SUGGEST_NBT = ((context, builder) ->
+        SharedSuggestionProvider.suggest(
+            generateNBTSuggestions(context),
+            builder));
+
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher)
     {
@@ -54,7 +64,12 @@ public class CrystalCommand
 
         LiteralArgumentBuilder<CommandSourceStack> objective = Commands.literal("setObjective").
             then(Commands.argument("objective", EnumArgument.enumArgument(Objective.class)).
-                executes(ctx -> setObjective(ctx.getSource().getPlayerOrException(), ctx.getArgument("objective", Objective.class))));
+                executes(ctx -> setObjective(ctx.getSource().getPlayerOrException(), ctx.getArgument("objective", Objective.class), new CompoundTag())).
+                then(Commands.argument("parameters", NbtTagArgument.nbtTag()).
+                    suggests(SUGGEST_NBT).
+                    executes(ctx -> setObjective(ctx.getSource().getPlayerOrException(),
+                        ctx.getArgument("objective", Objective.class),
+                        NbtTagArgument.getNbtTag(ctx, "parameters")))));
 
         LiteralArgumentBuilder<CommandSourceStack> theme = Commands.literal("setTheme").
             then(Commands.argument("theme", ResourceLocationArgument.id()).
@@ -91,7 +106,7 @@ public class CrystalCommand
     }
 
 
-    private static int setObjective(ServerPlayer player, Objective objective)
+    private static int setObjective(ServerPlayer player, Objective objective, Tag parameters)
     {
         ItemStack mainHandItem = player.getMainHandItem();
 
@@ -101,7 +116,73 @@ public class CrystalCommand
             throw new IllegalArgumentException("Not crystal in hand");
         }
 
+        switch (objective)
+        {
+            case ASCENSION ->
+            {
+                if (!(parameters instanceof CompoundTag tag) || tag.isEmpty() || !tag.contains("stack"))
+                {
+                    player.sendMessage(new TextComponent("Missing parameters. Needs like `{stack:1b,player_name:name,player_uuid:UUID,modifiers:{}}`"), Util.NIL_UUID);
+                    throw new IllegalArgumentException("Missing objective parameters");
+                }
+            }
+            case BOSS ->
+            {
+                if (!(parameters instanceof CompoundTag tag) || tag.isEmpty() || !tag.contains("target") || !tag.contains("wave"))
+                {
+                    player.sendMessage(new TextComponent("Missing parameters. Needs like `{target:{min:1b,max:3b,type:\"uniform\"},wave:{count:4b,type:\"constant\"}}`"), Util.NIL_UUID);
+                    throw new IllegalArgumentException("Missing objective parameters");
+                }
+            }
+            case COMPOUND ->
+            {
+                if (!(parameters instanceof CompoundTag tag) || tag.isEmpty())
+                {
+                    player.sendMessage(new TextComponent("Missing parameters."), Util.NIL_UUID);
+                    throw new IllegalArgumentException("Missing objective parameters");
+                }
+            }
+            case MONOLITH ->
+            {
+                if (!(parameters instanceof CompoundTag tag) || tag.isEmpty() || !tag.contains("target"))
+                {
+                    player.sendMessage(new TextComponent("Missing parameters. Needs like `{target:{min:1b,max:3b,type:\"uniform\"}}`"), Util.NIL_UUID);
+                    throw new IllegalArgumentException("Missing objective parameters");
+                }
+            }
+            case PARADOX ->
+            {
+                if (!(parameters instanceof CompoundTag tag) || tag.isEmpty() || !tag.contains("goal"))
+                {
+                    player.sendMessage(new TextComponent("Missing parameters. Needs like `{goal:BUILD,player_name:name,player_uuid:UUID,expiry:0L,reset_timer:1}`"), Util.NIL_UUID);
+                    throw new IllegalArgumentException("Missing objective parameters");
+                }
+            }
+            case POLL ->
+            {
+                if (!(parameters instanceof CompoundTag tag) || tag.isEmpty() || !tag.contains("id"))
+                {
+                    player.sendMessage(new TextComponent("Missing parameters. Needs like `{id:resource}`"), Util.NIL_UUID);
+                    throw new IllegalArgumentException("Missing objective parameters");
+                }
+            }
+            case SPEEDRUN ->
+            {
+                if (!(parameters instanceof CompoundTag tag) || tag.isEmpty() || !tag.contains("target"))
+                {
+                    player.sendMessage(new TextComponent("Missing parameters. Needs like `{target:{count:1b,type:\"constant\"}`"), Util.NIL_UUID);
+                    throw new IllegalArgumentException("Missing objective parameters");
+                }
+            }
+        }
+
         CrystalData data = CrystalData.read(mainHandItem);
+
+        if (parameters instanceof CompoundTag tag && !tag.isEmpty())
+        {
+            objective.getObjective().readNbt(tag);
+        }
+
         data.setObjective(objective.getObjective());
         data.write(mainHandItem);
 
@@ -203,6 +284,27 @@ public class CrystalCommand
     }
 
 
+    private static List<String> generateNBTSuggestions(CommandContext<CommandSourceStack> context)
+        throws CommandSyntaxException
+    {
+        Objective objective = context.getArgument("objective", Objective.class);
+
+        String returnMessage = switch (objective)
+        {
+            case ASCENSION ->  "{stack:1b,player_name:name,player_uuid:UUID,modifiers:{}}";
+            case BOSS -> "{target:{min:1b,max:3b,type:\"uniform\"},wave:{count:4b,type:\"constant\"}}";
+            case COMPOUND -> "{children:{<tag>}}";
+            case MONOLITH -> "{target:{min:1b,max:3b,type:\"uniform\"}}";
+            case PARADOX -> "{goal:BUILD,player_name:name,player_uuid:UUID,expiry:0L,reset_timer:1}";
+            case POLL -> "{id:resource}";
+            case SPEEDRUN -> "{target:{count:1b,type:\"constant\"}}";
+            default -> "";
+        };
+
+        return Collections.singletonList(returnMessage);
+    }
+
+
     enum Objective
     {
         ASCENSION(new AscensionCrystalObjective()),
@@ -217,7 +319,7 @@ public class CrystalCommand
         PARADOX(new ParadoxCrystalObjective()),
         POLL(new PoolCrystalObjective()),
         SCAVENGER(new ScavengerCrystalObjective()),
-        SPEEDRUN(new SpeedrunCrystalObjective());
+        SPEEDRUN(new SpeedrunCrystalObjective(IntRoll.ofConstant(5), 0));
 
         Objective(CrystalObjective objective)
         {
@@ -225,9 +327,9 @@ public class CrystalCommand
         }
 
 
-        public CrystalObjective getObjective()
+        public <T extends CrystalObjective> T getObjective()
         {
-            return objective;
+            return (T) objective;
         }
 
 

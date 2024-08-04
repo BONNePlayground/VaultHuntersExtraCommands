@@ -12,6 +12,7 @@
     "GodAltarDataAccessor",
     "MixinClassicListenersLogic",
     "MixinListener",
+    "MixinSpeedrunCrystalObjective",
     "MixinVirtualWorld",
     "MixinVirtualWorlds",
     "ParadoxCrystalDataAccessor",

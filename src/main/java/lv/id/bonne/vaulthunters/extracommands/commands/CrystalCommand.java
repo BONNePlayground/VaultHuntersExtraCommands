@@ -308,6 +308,7 @@ public class CrystalCommand
     enum Objective
     {
         ASCENSION(new AscensionCrystalObjective()),
+        BINGO(new BingoCrystalObjective()),
         BOSS(new BossCrystalObjective()),
         CAKE(new CakeCrystalObjective()),
         COMPOUND(new CompoundCrystalObjective()),
@@ -316,6 +317,7 @@ public class CrystalCommand
         HERALD(new HeraldCrystalObjective()),
         MONOLITH(new MonolithCrystalObjective()),
         NULL(NullCrystalObjective.INSTANCE),
+        OFFERING(new OfferingBossCrystalObjective()),
         PARADOX(new ParadoxCrystalObjective()),
         POLL(new PoolCrystalObjective()),
         SCAVENGER(new ScavengerCrystalObjective()),

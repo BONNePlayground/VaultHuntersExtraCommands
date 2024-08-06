@@ -13,16 +13,15 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
-import iskallia.vault.task.FailGodAltarTask;
-import iskallia.vault.task.NodeTask;
-import iskallia.vault.task.ProgressConfiguredTask;
-import iskallia.vault.task.Task;
+import iskallia.vault.core.vault.Vault;
+import iskallia.vault.task.*;
 import iskallia.vault.task.source.EntityTaskSource;
 import iskallia.vault.task.source.TaskSource;
 import iskallia.vault.world.data.GodAltarData;
+import iskallia.vault.world.data.ServerVaults;
 import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
 import lv.id.bonne.vaulthunters.extracommands.mixin.GodAltarDataAccessor;
-import lv.id.bonne.vaulthunters.extracommands.mixin.ProgressConfiguredTaskAccessor;
+import lv.id.bonne.vaulthunters.extracommands.mixin.GodAltarTaskAccessor;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -82,21 +81,17 @@ public class GodAltarCompleteCommand
                 {
                     if (entitySource.matches(player))
                     {
-                        NodeTask task = (NodeTask) entry.getTask();
-
-                        for (NodeTask child : task.getChildren())
+                        if (entry.getTask() instanceof GodAltarTask godTask)
                         {
-                            Task delegate = child.getDelegate();
-
-                            if (!complete && delegate instanceof FailGodAltarTask fail)
+                            if (!complete)
                             {
-                                fail.onStop(var4);
+                                godTask.onFail(TaskContext.of(var4, player.getServer()));
                                 ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " failed God Altar!");
                             }
-                            else if (complete && delegate instanceof ProgressConfiguredTask progressTask)
+                            else
                             {
-                                ProgressConfiguredTaskAccessor accessor = (ProgressConfiguredTaskAccessor) progressTask;
-                                accessor.setCurrentCount(accessor.getTargetCount());
+                                Vault vault = ServerVaults.get(((GodAltarTaskAccessor) godTask).getVaultUuid()).orElse(null);
+                                godTask.onSucceed(vault, TaskContext.of(var4, player.getServer()));
                                 ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " completed God Altar!");
                             }
                         }

@@ -185,10 +185,7 @@ public class LocateAngelBlockCommand
                 locations.forEach(pos -> {
                     for(int i = 0; i < 8; ++i) {
                         Vec3 v = MiscUtils.getRandomOffset(pos, player.getLevel().getRandom());
-                        ModNetwork.CHANNEL.sendTo(new ClientboundHunterParticlesMessage(v.x, v.y, v.z,
-                                (float)color.getRed() / 255.0F,
-                                (float)color.getGreen() / 255.0F,
-                                (float)color.getBlue() / 255.0F),
+                        ModNetwork.CHANNEL.sendTo(new ClientboundHunterParticlesMessage(v.x, v.y, v.z, null, color.getRGB()),
                             player.connection.getConnection(),
                             NetworkDirection.PLAY_TO_CLIENT);
                     }

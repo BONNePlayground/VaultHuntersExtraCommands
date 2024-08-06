@@ -10,6 +10,7 @@
     "DiscoveredWorkbenchModifiersDataAccessor",
     "DiscoveryGoalStatesDataAccessor",
     "GodAltarDataAccessor",
+    "GodAltarTaskAccessor",
     "MixinClassicListenersLogic",
     "MixinListener",
     "MixinSpeedrunCrystalObjective",
@@ -23,8 +24,6 @@
     "PlayerSpiritRecoveryDataAccessor",
     "PlayerStatsDataAccessor",
     "PlayerVaultStatsDataAccessor",
-    "ProgressConfiguredTaskAccessor",
-    "VaultAltarTileEntityAccessor",
     "VaultGearTierConfigAccessor"
   ],
   "client": []

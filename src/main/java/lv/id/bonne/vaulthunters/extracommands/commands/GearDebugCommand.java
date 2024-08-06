@@ -20,10 +20,7 @@ import java.util.stream.Collectors;
 
 import iskallia.vault.config.gear.VaultGearTierConfig;
 import iskallia.vault.dynamodel.registry.DynamicModelRegistry;
-import iskallia.vault.gear.GearRollHelper;
-import iskallia.vault.gear.VaultGearModifierHelper;
-import iskallia.vault.gear.VaultGearRarity;
-import iskallia.vault.gear.VaultGearState;
+import iskallia.vault.gear.*;
 import iskallia.vault.gear.attribute.VaultGearAttribute;
 import iskallia.vault.gear.attribute.VaultGearAttributeRegistry;
 import iskallia.vault.gear.attribute.VaultGearModifier;
@@ -344,7 +341,7 @@ public class GearDebugCommand
         if (resourceLocation == null)
         {
             List<VaultGearModifier<?>> modifiers = new ArrayList<>(data.getModifiers(type));
-            modifiers.removeIf(modifier -> !modifier.getCategory().isModifiableByArtisanFoci());
+            modifiers.removeIf(modifier -> !modifier.hasNoCategoryMatching(VaultGearModifier.AffixCategory::cannotBeModifiedByArtisanFoci));
 
             if (!modifiers.isEmpty())
             {
@@ -765,7 +762,7 @@ public class GearDebugCommand
 
         if (roll == Roll.ADD || roll == Roll.NONE && getLegendaryAttribute(config, data).isEmpty())
         {
-            VaultGearModifierHelper.generateLegendaryModifier(mainHandItem, GearRollHelper.rand);
+            VaultGearLegendaryHelper.generateLegendaryModifier(mainHandItem, GearRollHelper.rand);
 
             Util.sendGodMessageToPlayer(player,
                 new TextComponent("Your tool has been blessed!").
@@ -819,7 +816,7 @@ public class GearDebugCommand
         }
         else
         {
-            newMod.setCategory(VaultGearModifier.AffixCategory.LEGENDARY);
+            newMod.addCategory(VaultGearModifier.AffixCategory.LEGENDARY);
 
             if (data.removeModifier(legendary.getB()))
             {
@@ -863,7 +860,7 @@ public class GearDebugCommand
         Collections.shuffle(modifiers);
 
         return modifiers.stream().
-            filter(mod -> mod.getB().getCategory() == VaultGearModifier.AffixCategory.LEGENDARY).
+            filter(mod -> mod.getB().hasCategory(VaultGearModifier.AffixCategory.LEGENDARY)).
             findAny();
     }
 
@@ -872,11 +869,11 @@ public class GearDebugCommand
     {
         VaultGearTierConfig.ModifierTierGroup group = config.getTierGroup(modifier.getModifierIdentifier());
 
-        if (!modifier.getCategory().isModifiableByArtisanFoci())
+        if (modifier.hasNoCategoryMatching(VaultGearModifier.AffixCategory::cannotBeModifiedByArtisanFoci))
         {
             return true;
         }
-        if (group == null)
+        else if (group == null)
         {
             return false;
         }

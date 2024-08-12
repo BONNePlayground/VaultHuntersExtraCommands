@@ -14,18 +14,13 @@ import java.util.function.Function;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraftforge.fml.util.thread.SidedThreadGroups;
 
 
 public class ExtraCommandsData extends SavedData
 {
     protected static final String DATA_NAME = "extra_commands_data";
-
-    public Map<ResourceLocation, Boolean> paused = new ConcurrentHashMap<>();
 
     public Map<UUID, Integer> time = new ConcurrentHashMap<>();
 
@@ -44,54 +39,33 @@ public class ExtraCommandsData extends SavedData
     @NotNull
     public CompoundTag save(CompoundTag tag)
     {
-        tag.put("pausedVaults", serializePaused());
         tag.put("playerData", serializePlayerData());
         return tag;
     }
 
 
     /**
-     * Method for fetching the settings from a Level
-     *
-     * @param level Preferably a ServerLevel, but not strictly required.
-     * @return A populated WorldSettings instance
+     * Return data file from minecraft server instance
+     * @return ExtraCommandsData
      */
-    public static ExtraCommandsData get(Level level)
+    public static ExtraCommandsData get(ServerLevel level)
     {
-        if (Thread.currentThread().getThreadGroup() == SidedThreadGroups.SERVER &&
-            level instanceof ServerLevel serverLevel)
-        {
-            return serverLevel.getServer().overworld().getDataStorage().computeIfAbsent(ExtraCommandsData.load(serverLevel),
-                ExtraCommandsData::new,
-                DATA_NAME);
-        }
-
-        return null;
+        return level.getDataStorage().computeIfAbsent(ExtraCommandsData.load(),
+            ExtraCommandsData::new,
+            DATA_NAME);
     }
 
 
     /**
      * Generates a function for loading settings from NBT
      *
-     * @param level Preferably the ServerLevel we load our data onto. In most cases the overworld since it is always
-     * partially loaded.
      * @return Function for loading settings from NBT
      */
-    public static Function<CompoundTag, ExtraCommandsData> load(ServerLevel level)
+    public static Function<CompoundTag, ExtraCommandsData> load()
     {
         return (tag) ->
         {
             ExtraCommandsData data = new ExtraCommandsData();
-
-            if (tag.contains("pausedVaults"))
-            {
-                CompoundTag paused = tag.getCompound("pausedVaults");
-
-                paused.getAllKeys().forEach(key ->
-                {
-                    data.paused.put(ResourceLocation.tryParse(key), paused.getBoolean(key));
-                });
-            }
 
             ListTag playerList = tag.getList("playerData", 10);
 
@@ -105,14 +79,6 @@ public class ExtraCommandsData extends SavedData
 
             return data;
         };
-    }
-
-
-    private CompoundTag serializePaused()
-    {
-        CompoundTag tag = new CompoundTag();
-        this.paused.forEach(((key, value) -> tag.putBoolean(key.toString(), value)));
-        return tag;
     }
 
 

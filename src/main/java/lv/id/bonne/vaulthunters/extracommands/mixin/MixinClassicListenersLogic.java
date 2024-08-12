@@ -34,22 +34,16 @@ public class MixinClassicListenersLogic
     {
         ExtraCommandsData extraCommandsData = ExtraCommandsData.get(world);
 
-        try
+        if (listener.has(Listener.ID) &&
+            extraCommandsData.time.containsKey(listener.get(Listener.ID)))
         {
-            if (extraCommandsData != null &&
-                listener.has(Listener.ID) &&
-                extraCommandsData.time.containsKey(listener.get(Listener.ID)))
-            {
-                int extraTicks = extraCommandsData.time.getOrDefault(listener.get(Listener.ID), 0) * 20;
+            int extraTicks = extraCommandsData.time.getOrDefault(listener.get(Listener.ID), 0) * 20;
 
-                vault.ifPresent(Vault.CLOCK, clock ->
-                    clock.setIfPresent(TickClock.DISPLAY_TIME,
-                        clock.get(TickClock.DISPLAY_TIME) + extraTicks));
-            }
-        }
-        catch (Exception e)
-        {
-            ExtraCommands.LOGGER.error("Failed to change vault time because of: " + e.getMessage());
+            ExtraCommands.LOGGER.info("Adding extra ticks to the player vault " + extraTicks);
+
+            vault.ifPresent(Vault.CLOCK, clock ->
+                clock.setIfPresent(TickClock.DISPLAY_TIME,
+                    clock.get(TickClock.DISPLAY_TIME) + extraTicks));
         }
     }
 }

@@ -58,36 +58,36 @@ public class VaultPermanentTimeCommand
     private static int storeSecondsData(ServerPlayer player, int seconds)
     {
         ExtraCommandsData extraCommandsData = ExtraCommandsData.get(player.getLevel());
+        Integer value = extraCommandsData.time.putIfAbsent(player.getUUID(), 0);
 
-        if (extraCommandsData != null)
+        if (value != null && value + seconds == 0)
         {
-            Integer value = extraCommandsData.time.putIfAbsent(player.getUUID(), 0);
-
-            if (value != null && value + seconds == 0)
-            {
-                // Remove if time is 0.
-                extraCommandsData.time.remove(player.getUUID());
-            }
-            else
-            {
-                // add time to the data.
-                extraCommandsData.time.put(player.getUUID(),
-                    value != null ? value + seconds : seconds);
-            }
-
-            if (seconds < 0)
-            {
-                Util.sendGodMessageToPlayer(player,
-                    "You have been punished! I remove " + (-seconds)  + " seconds from your all next vaults!");
-            }
-            else
-            {
-                Util.sendGodMessageToPlayer(player,
-                    "You have been blessed with extra " + seconds  + " seconds for your all next vaults!");
-            }
-
-            extraCommandsData.setDirty();
+            // Remove if time is 0.
+            extraCommandsData.time.remove(player.getUUID());
         }
+        else
+        {
+            // add time to the data.
+            extraCommandsData.time.put(player.getUUID(),
+                value != null ? value + seconds : seconds);
+        }
+
+        if (seconds < 0)
+        {
+            ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " time in vault reduced by " + (-seconds));
+
+            Util.sendGodMessageToPlayer(player,
+                "You have been punished! I remove " + (-seconds)  + " seconds from your all next vaults!");
+        }
+        else
+        {
+            ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " time in vault increased by " + seconds);
+
+            Util.sendGodMessageToPlayer(player,
+                "You have been blessed with extra " + seconds  + " seconds for your all next vaults!");
+        }
+
+        extraCommandsData.setDirty();
 
         return 1;
     }
@@ -97,32 +97,29 @@ public class VaultPermanentTimeCommand
     {
         ExtraCommandsData extraCommandsData = ExtraCommandsData.get(player.getLevel());
 
-        if (extraCommandsData != null)
+        Integer value = extraCommandsData.time.getOrDefault(player.getUUID(), 0);
+        String message;
+
+        if (value > 0)
         {
-            Integer value = extraCommandsData.time.getOrDefault(player.getUUID(), 0);
-            String message;
+            message = "Player " + player.getDisplayName().getString() + " has " + value + " seconds extra in each vault!";
+        }
+        else if (value < 0)
+        {
+            message = "Player " + player.getDisplayName().getString() + " has " + value + " seconds less in each vault!";
+        }
+        else
+        {
+            message = "Player " + player.getDisplayName().getString() + " does not have extra time in each vault!";
+        }
 
-            if (value > 0)
-            {
-                message = "Player " + player.getDisplayName().getString() + " has " + value + " seconds extra in each vault!";
-            }
-            else if (value < 0)
-            {
-                message = "Player " + player.getDisplayName().getString() + " has " + value + " seconds less in each vault!";
-            }
-            else
-            {
-                message = "Player " + player.getDisplayName().getString() + " does not have extra time in each vault!";
-            }
-
-            try
-            {
-                Util.sendGodMessageToPlayer(source.getPlayerOrException(), message);
-            }
-            catch (CommandSyntaxException e)
-            {
-                ExtraCommands.LOGGER.info(message);
-            }
+        try
+        {
+            Util.sendGodMessageToPlayer(source.getPlayerOrException(), message);
+        }
+        catch (CommandSyntaxException e)
+        {
+            ExtraCommands.LOGGER.info(message);
         }
 
         return 1;

@@ -40,11 +40,11 @@ public class KickCommand
         LiteralArgumentBuilder<CommandSourceStack> vaultLiteral = Commands.literal("vault");
 
         LiteralArgumentBuilder<CommandSourceStack> kick = Commands.literal("kick").
-            executes(ctx -> completeBounty(ctx.getSource().getPlayerOrException(), false)).
+            executes(ctx -> kickPlayerCompletion(ctx.getSource().getPlayerOrException(), false)).
             then(Commands.argument("player", EntityArgument.players()).
-                executes(ctx -> completeBounty(EntityArgument.getPlayer(ctx, "player"), false)).
+                executes(ctx -> kickPlayerCompletion(EntityArgument.getPlayer(ctx, "player"), false)).
                 then(Commands.argument("complete", BoolArgumentType.bool()).
-                    executes(ctx -> completeBounty(EntityArgument.getPlayer(ctx, "player"),
+                    executes(ctx -> kickPlayerCompletion(EntityArgument.getPlayer(ctx, "player"),
                         BoolArgumentType.getBool(ctx, "complete")))));
 
         dispatcher.register(baseLiteral.then(vaultLiteral.then(kick)));
@@ -56,24 +56,31 @@ public class KickCommand
      * @param player Player which bounty need to be completed.
      * @return 1
      */
-    private static int completeBounty(ServerPlayer player, boolean complete)
+    private static int kickPlayerCompletion(ServerPlayer player, boolean complete)
     {
         for (Vault vault : ServerVaults.getAll())
         {
             vault.ifPresent(Vault.LISTENERS, (listeners) ->
             {
-                Listener listener = listeners.get(player.getUUID());
-
-                ServerVaults.getWorld(vault).ifPresent((world) ->
+                if (listeners.contains(player.getUUID()))
                 {
-                    listeners.remove(world, vault, listener);
+                    Listener listener = listeners.get(player.getUUID());
 
-                    vault.ifPresent(Vault.STATS, (collector) ->
-                        listener.ifPresent(Listener.ID, id -> {
-                            StatCollector stats = collector.get(id);
-                            stats.set(StatCollector.COMPLETION, complete ? Completion.COMPLETED : Completion.BAILED);
-                        }));
-                });
+                    ServerVaults.getWorld(vault).ifPresent((world) ->
+                    {
+                        listeners.remove(world, vault, listener);
+
+                        vault.ifPresent(Vault.STATS, (collector) ->
+                            listener.ifPresent(Listener.ID, id ->
+                            {
+                                StatCollector stats = collector.get(id);
+                                stats.set(StatCollector.COMPLETION,
+                                    complete ? Completion.COMPLETED : Completion.BAILED);
+
+                                ExtraCommands.LOGGER.info("Kicked player with completion " + complete);
+                            }));
+                    });
+                }
             });
         }
 

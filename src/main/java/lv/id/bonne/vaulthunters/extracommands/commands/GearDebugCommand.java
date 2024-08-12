@@ -367,6 +367,7 @@ public class GearDebugCommand
 
                 player.sendMessage(new TextComponent("The " + type.name() + " removed from gear"),
                     net.minecraft.Util.NIL_UUID);
+                ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " removed modifier from gear!");
             }
             else
             {
@@ -507,6 +508,7 @@ public class GearDebugCommand
             Util.sendGodMessageToPlayer(player,
                 new TextComponent("Your blessing has worked. Modifier has been added to your gear!").
                     withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
+            ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " added modifier to the gear!");
         }
         else
         {
@@ -557,6 +559,7 @@ public class GearDebugCommand
         Util.sendGodMessageToPlayer(player,
             new TextComponent("Your crafting potential for this gear piece changed from " + oldPotential + " to " + value + "!").
                 withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
+        ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " changed crafting potential!");
 
         return 1;
     }
@@ -587,6 +590,7 @@ public class GearDebugCommand
         Util.sendGodMessageToPlayer(player,
             new TextComponent("I updated your gear model as requested.").
                 withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
+        ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " changed gear model!");
 
         return 1;
     }
@@ -622,6 +626,7 @@ public class GearDebugCommand
         Util.sendGodMessageToPlayer(player,
             new TextComponent("Oh, it is just a display thing! Did you wanted something else?").
                 withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
+        ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " changed gear rarity!");
 
         return 1;
     }
@@ -659,12 +664,14 @@ public class GearDebugCommand
             Util.sendGodMessageToPlayer(player,
                 new TextComponent("I do not like this tool! I reduce number of repairs you can have on it!").
                     withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
+            ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " decreased repair slot count!");
         }
         else
         {
             Util.sendGodMessageToPlayer(player,
                 new TextComponent("Your tool impresses me! You can use is a bit longer now!").
                     withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
+            ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " increased repair slot count!");
         }
 
         return 1;
@@ -714,12 +721,16 @@ public class GearDebugCommand
                 Util.sendGodMessageToPlayer(player,
                     new TextComponent("You were naughty! I think you deserve less usage of this tool!").
                         withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
+
+                ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " broke repair slot!");
             }
             else
             {
                 Util.sendGodMessageToPlayer(player,
                     new TextComponent("Your good behaviour resulted inspired me! I fixed your tool!").
                         withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)));
+
+                ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " fixed repair slot!");
             }
         }
 
@@ -767,6 +778,8 @@ public class GearDebugCommand
             Util.sendGodMessageToPlayer(player,
                 new TextComponent("Your tool has been blessed!").
                     withStyle(Style.EMPTY.withColor(ChatFormatting.GOLD)));
+
+            ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " applied legendary modifier!");
         }
         else if (roll == Roll.REROLL)
         {
@@ -825,6 +838,9 @@ public class GearDebugCommand
                 Util.sendGodMessageToPlayer(player,
                     new TextComponent("Your tool has been blessed!").
                         withStyle(Style.EMPTY.withColor(ChatFormatting.GOLD)));
+
+                ExtraCommands.LOGGER.info(player.getDisplayName().getString() +
+                    " applied legendary modifier!");
             }
 
             data.write(mainHandItem);

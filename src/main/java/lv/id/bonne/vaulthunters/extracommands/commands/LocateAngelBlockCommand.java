@@ -110,6 +110,8 @@ public class LocateAngelBlockCommand
 
                     player.sendMessage(message, player.getUUID());
                 });
+
+            ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " searched lost angel blocks.");
         }
         catch (ClassNotFoundException | IllegalAccessException e)
         {

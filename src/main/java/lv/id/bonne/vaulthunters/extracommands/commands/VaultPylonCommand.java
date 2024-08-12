@@ -147,6 +147,7 @@ public class VaultPylonCommand
                 append(new TextComponent("!"));
 
             Util.sendGodMessageToPlayer(player, message);
+            ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " has received pylon effect: " + effect.getDisplayName().getString());
         }
 
         return 1;

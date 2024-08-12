@@ -187,6 +187,7 @@ public class CrystalCommand
         data.write(mainHandItem);
 
         player.sendMessage(new TextComponent("Crystal objective changed"), Util.NIL_UUID);
+        ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " changed crystal objective to " + objective);
 
         return 1;
     }
@@ -207,6 +208,7 @@ public class CrystalCommand
         data.write(mainHandItem);
 
         player.sendMessage(new TextComponent("Crystal theme changed"), Util.NIL_UUID);
+        ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " changed crystal theme to " + theme.toString());
 
         return 1;
     }
@@ -269,6 +271,7 @@ public class CrystalCommand
         data.write(mainHandItem);
 
         player.sendMessage(new TextComponent("Crystal layout changed"), Util.NIL_UUID);
+        ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " changed crystal layout to " + layout);
 
         return 1;
     }

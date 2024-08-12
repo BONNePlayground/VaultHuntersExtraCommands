@@ -79,6 +79,7 @@ public class VaultAltarCompleteCommand
 
             data.setDirty();
 
+            ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " completed vault altar recipe for free.");
             Util.sendGodMessageToPlayer(player, "I finished your crystal recipe! Waiting you in the vault!");
         }
 
@@ -114,6 +115,7 @@ public class VaultAltarCompleteCommand
 
                 data.setDirty();
 
+                ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " reloaded vault altar recipe.");
                 Util.sendGodMessageToPlayer(player, "I know it was too hard. I changed your recipe!");
             }
         }

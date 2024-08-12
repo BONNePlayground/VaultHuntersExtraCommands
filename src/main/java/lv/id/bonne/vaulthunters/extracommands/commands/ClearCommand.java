@@ -68,11 +68,11 @@ public class ClearCommand
             requires(stack -> stack.hasPermission(1));
 
         LiteralArgumentBuilder<CommandSourceStack> complete = Commands.literal("reset").
-            executes(ctx -> clearPlayerData(ctx.getSource().getPlayerOrException(), Mode.COMPLETE.name())).
+            executes(ctx -> clearPlayerData(ctx.getSource().getPlayerOrException(), Mode.COMPLETE)).
             then(Commands.argument("player", EntityArgument.players()).
-                executes(ctx -> clearPlayerData(EntityArgument.getPlayer(ctx, "player"), Mode.COMPLETE.name())).
+                executes(ctx -> clearPlayerData(EntityArgument.getPlayer(ctx, "player"), Mode.COMPLETE))).
                 then(Commands.argument("mode", EnumArgument.enumArgument(Mode.class)).
-                    executes(ctx -> clearPlayerData(EntityArgument.getPlayer(ctx, "player"), StringArgumentType.getString(ctx, "mode"))))
+                    executes(ctx -> clearPlayerData(EntityArgument.getPlayer(ctx, "player"), ctx.getArgument("mode", Mode.class)))
             );
 
         dispatcher.register(baseLiteral.then(complete));
@@ -84,21 +84,8 @@ public class ClearCommand
      * @param player Player which bounty need to be completed.
      * @return 1
      */
-    private static int clearPlayerData(ServerPlayer player, String mode)
+    private static int clearPlayerData(ServerPlayer player, Mode clearMode)
     {
-        Optional<Mode> value = Enums.getIfPresent(Mode.class, mode.toUpperCase());
-
-        Mode clearMode;
-
-        if (value.isPresent())
-        {
-            clearMode = value.get();
-        }
-        else
-        {
-            clearMode = Mode.COMPLETE;
-        }
-
         switch (clearMode)
         {
             case ALTAR -> removeVaultAltarData(player);
@@ -163,7 +150,7 @@ public class ClearCommand
             }
         }
 
-        ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " player " + mode + " data are cleared!");
+        ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " player " + clearMode.name() + " data are cleared!");
 
         return 1;
     }

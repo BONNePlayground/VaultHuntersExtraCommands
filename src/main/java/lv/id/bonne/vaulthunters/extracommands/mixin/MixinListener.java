@@ -13,11 +13,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import iskallia.vault.core.vault.player.Listener;
 import iskallia.vault.core.world.storage.VirtualWorld;
-import lv.id.bonne.vaulthunters.extracommands.data.ExtraCommandsData;
+import lv.id.bonne.vaulthunters.extracommands.data.ExtraCommandsWorldData;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.Level;
 
 
 @Mixin(value = Listener.class, remap = false)
@@ -29,12 +27,7 @@ public class MixinListener
         BlockPos start,
         CallbackInfoReturnable<Boolean> cir)
     {
-        ExtraCommandsData extraCommandsData = ExtraCommandsData.get(world);
-
-        ResourceKey<Level> dimension = world.dimension();
-
-        if (extraCommandsData != null &&
-            extraCommandsData.paused.containsKey(dimension.location()))
+        if (ExtraCommandsWorldData.get(world).isPaused())
         {
             cir.setReturnValue(false);
         }

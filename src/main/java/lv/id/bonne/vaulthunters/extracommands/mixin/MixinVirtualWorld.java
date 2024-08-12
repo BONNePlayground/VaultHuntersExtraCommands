@@ -18,14 +18,14 @@ import iskallia.vault.core.vault.Vault;
 import iskallia.vault.core.vault.time.TickClock;
 import iskallia.vault.core.world.storage.VirtualWorld;
 import iskallia.vault.world.data.ServerVaults;
-import lv.id.bonne.vaulthunters.extracommands.data.ExtraCommandsData;
+import lv.id.bonne.vaulthunters.extracommands.data.ExtraCommandsWorldData;
 
 
 @Mixin(value = VirtualWorld.class)
 public class MixinVirtualWorld
 {
     @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
-    private void removeFromSave(BooleanSupplier hasTimeLeft, CallbackInfo ci)
+    private void tickServerPause(BooleanSupplier hasTimeLeft, CallbackInfo ci)
     {
         VirtualWorld world = ((VirtualWorld) (Object)this);
 
@@ -33,10 +33,7 @@ public class MixinVirtualWorld
             vault.ifPresent(Vault.CLOCK, tickClock -> {
                 if (tickClock.has(TickClock.PAUSED))
                 {
-                    ExtraCommandsData extraCommandsData = ExtraCommandsData.get(world);
-
-                    if (extraCommandsData != null &&
-                        extraCommandsData.paused.getOrDefault(world.dimension().location(), false))
+                    if (ExtraCommandsWorldData.get(world).isPaused())
                     {
                         ci.cancel();
                     }

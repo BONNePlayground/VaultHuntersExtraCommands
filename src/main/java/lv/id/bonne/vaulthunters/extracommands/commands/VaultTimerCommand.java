@@ -19,6 +19,7 @@ import iskallia.vault.core.vault.time.modifier.PylonExtension;
 import iskallia.vault.world.data.ServerVaults;
 import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
 import lv.id.bonne.vaulthunters.extracommands.data.ExtraCommandsData;
+import lv.id.bonne.vaulthunters.extracommands.data.ExtraCommandsWorldData;
 import lv.id.bonne.vaulthunters.extracommands.util.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -116,26 +117,18 @@ public class VaultTimerCommand
                 Util.sendGodMessageToAll(level,
                     "I am back! Clock is now ticking!");
 
-                ExtraCommandsData extraCommandsData = ExtraCommandsData.get(level);
-
-                if (extraCommandsData != null)
-                {
-                    extraCommandsData.paused.remove(level.dimension().location());
-                    extraCommandsData.setDirty();
-                }
+                ExtraCommandsWorldData extraCommandsData = ExtraCommandsWorldData.get(level);
+                extraCommandsData.setPaused(false);
+                extraCommandsData.setDirty();
             }
             else
             {
                 ExtraCommands.LOGGER.info("Vault timer paused!");
                 tickClock.set(TickClock.PAUSED);
 
-                ExtraCommandsData extraCommandsData = ExtraCommandsData.get(level);
-
-                if (extraCommandsData != null)
-                {
-                    extraCommandsData.paused.put(level.dimension().location(), tickStop);
-                    extraCommandsData.setDirty();
-                }
+                ExtraCommandsWorldData extraCommandsData = ExtraCommandsWorldData.get(level);
+                extraCommandsData.setPaused(tickStop);
+                extraCommandsData.setDirty();
 
                 Util.sendGodMessageToAll(level,
                     "I have some pending tasks to do! Can you wait a bit?");
@@ -159,10 +152,12 @@ public class VaultTimerCommand
                 if (seconds > 0)
                 {
                     Util.sendGodMessageToAll(level, "You have been blessed with extra " + seconds + " seconds in the Vault!");
+                    ExtraCommands.LOGGER.warn("Added extra " + seconds + " seconds to the vault!");
                 }
                 else
                 {
                     Util.sendGodMessageToAll(level, "You have been punished! I removed " + (-seconds) + " seconds from your Vault!", VaultGod.TENOS);
+                    ExtraCommands.LOGGER.warn("Removed " + (-seconds) + " seconds from the vault!");
                 }
             },
             () -> ExtraCommands.LOGGER.warn("Dimension does not have registered vault!"));

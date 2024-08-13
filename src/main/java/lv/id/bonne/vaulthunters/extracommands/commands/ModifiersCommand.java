@@ -5,7 +5,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import iskallia.vault.core.random.JavaRandom;
@@ -13,8 +13,11 @@ import iskallia.vault.core.vault.Modifiers;
 import iskallia.vault.core.vault.Vault;
 import iskallia.vault.core.vault.modifier.registry.VaultModifierRegistry;
 import iskallia.vault.core.vault.modifier.spi.VaultModifier;
+import iskallia.vault.core.vault.player.Listener;
+import iskallia.vault.core.world.storage.VirtualWorld;
 import iskallia.vault.world.data.ServerVaults;
 import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
+import lv.id.bonne.vaulthunters.extracommands.mixin.ListenersAccessor;
 import lv.id.bonne.vaulthunters.extracommands.util.Util;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -313,53 +316,33 @@ public class ModifiersCommand
     {
         boolean good = isPositiveModifier(effect);
 
-        ServerVaults.get(level).
-            flatMap(vault -> vault.getOptional(Vault.MODIFIERS)).
-            ifPresentOrElse(modifiers ->
-            {
-                if (add)
+        ServerVaults.get(level).ifPresentOrElse(vault ->
+        {
+            // Get active vault listeners.
+            Collection<Listener> optionalListeners = vault.getOptional(Vault.LISTENERS).
+                flatMap(listeners -> listeners.getOptional(ListenersAccessor.getMAP())).
+                map(AbstractMap::values).
+                orElse(Collections.emptyList());
+
+            // Get modifiers.
+            vault.getOptional(Vault.MODIFIERS).
+                ifPresentOrElse(modifiers ->
                 {
-                    modifiers.addModifier(effect, count, true, JavaRandom.ofInternal(0));
-
-                    Component component;
-
-                    if (good)
+                    if (add)
                     {
-                        component = new TextComponent("You are blessed with " + (count > 1 ? count + " " : "")).
-                            withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)).
-                            append(new TextComponent(effect.getDisplayName()).
-                                withStyle(style -> Style.EMPTY.
-                                    withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                                        new TextComponent(effect.getDisplayDescription()))).
-                                    withColor(effect.getDisplayTextColor())));
-                    }
-                    else
-                    {
-                        component = new TextComponent("You are punished by adding " + (count > 1 ? count + " " : "")).
-                            withStyle(Style.EMPTY.withColor(ChatFormatting.RED)).
-                            append(new TextComponent(effect.getDisplayName()).
-                                withStyle(style -> Style.EMPTY.
-                                    withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                                        new TextComponent(effect.getDisplayDescription()))).
-                                    withColor(effect.getDisplayTextColor())));
-                    }
+                        modifiers.addModifier(effect, count, true, JavaRandom.ofInternal(0));
 
-                    Util.sendGodMessageToAll(level, component);
-                }
-                else
-                {
-                    Optional<Modifiers.Entry> anyMatchingModifier = modifiers.getEntries().stream().
-                        filter(entry -> entry.getModifier().map(mod -> mod.equals(effect)).orElse(false)).
-                        findAny();
-
-                    anyMatchingModifier.ifPresentOrElse(entry -> {
-                        modifiers.getEntries().remove(entry);
+                        for (int i = 0; i < count; i++)
+                        {
+                            Modifiers.Entry entry = modifiers.getEntries().get(modifiers.getEntries().size() - i - 1);
+                            optionalListeners.forEach(listener -> effect.onListenerAdd((VirtualWorld) level, vault, entry.getContext(), listener));
+                        }
 
                         Component component;
 
-                        if (!good)
+                        if (good)
                         {
-                            component = new TextComponent("You are blessed by removing " + (count > 1 ? count + " " : "")).
+                            component = new TextComponent("You are blessed with " + (count > 1 ? count + " " : "")).
                                 withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)).
                                 append(new TextComponent(effect.getDisplayName()).
                                     withStyle(style -> Style.EMPTY.
@@ -369,7 +352,7 @@ public class ModifiersCommand
                         }
                         else
                         {
-                            component = new TextComponent("You are punished by removing " + (count > 1 ? count + " " : "")).
+                            component = new TextComponent("You are punished by adding " + (count > 1 ? count + " " : "")).
                                 withStyle(Style.EMPTY.withColor(ChatFormatting.RED)).
                                 append(new TextComponent(effect.getDisplayName()).
                                     withStyle(style -> Style.EMPTY.
@@ -378,10 +361,49 @@ public class ModifiersCommand
                                         withColor(effect.getDisplayTextColor())));
                         }
 
+                        ExtraCommands.LOGGER.info("Added new modifier to the vault: " + effect.getId().toString());
                         Util.sendGodMessageToAll(level, component);
-                    }, Util.logError("Could not find any matching modifiers to vault: " + effect.getDisplayName()));
-                }
-            }, Util.logError("Given dimension does not have Vault."));
+                    }
+                    else
+                    {
+                        Optional<Modifiers.Entry> anyMatchingModifier = modifiers.getEntries().stream().
+                            filter(entry -> entry.getModifier().map(mod -> mod.equals(effect)).orElse(false)).
+                            findAny();
+
+                        anyMatchingModifier.ifPresentOrElse(entry -> {
+                            modifiers.getEntries().remove(entry);
+                            optionalListeners.forEach(listener -> effect.onListenerRemove((VirtualWorld) level, vault, entry.getContext(), listener));
+
+                            Component component;
+
+                            if (!good)
+                            {
+                                component = new TextComponent("You are blessed by removing " + (count > 1 ? count + " " : "")).
+                                    withStyle(Style.EMPTY.withColor(ChatFormatting.WHITE)).
+                                    append(new TextComponent(effect.getDisplayName()).
+                                        withStyle(style -> Style.EMPTY.
+                                            withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                                new TextComponent(effect.getDisplayDescription()))).
+                                            withColor(effect.getDisplayTextColor())));
+                            }
+                            else
+                            {
+                                component = new TextComponent("You are punished by removing " + (count > 1 ? count + " " : "")).
+                                    withStyle(Style.EMPTY.withColor(ChatFormatting.RED)).
+                                    append(new TextComponent(effect.getDisplayName()).
+                                        withStyle(style -> Style.EMPTY.
+                                            withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                                new TextComponent(effect.getDisplayDescription()))).
+                                            withColor(effect.getDisplayTextColor())));
+                            }
+
+                            ExtraCommands.LOGGER.info("Removed modifier from the vault: " + effect.getId().toString());
+                            Util.sendGodMessageToAll(level, component);
+                        }, Util.logError("Could not find any matching modifiers to vault: " + effect.getDisplayName()));
+                    }
+                }, Util.logError("Could not modify modifiers."));
+
+        }, Util.logError("Given dimension does not have Vault."));
     }
 
 

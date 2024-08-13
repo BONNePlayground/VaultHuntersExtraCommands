@@ -47,7 +47,7 @@ public class ExtraCommands
             VaultPylonCommand.register(event.getDispatcher());
             GodAltarCompleteCommand.register(event.getDispatcher());
             VaultAltarCompleteCommand.register(event.getDispatcher());
-            ClearCommand.register(event.getDispatcher());
+            ResetCommand.register(event.getDispatcher());
             KickCommand.register(event.getDispatcher());
             VaultPermanentTimeCommand.register(event.getDispatcher());
             ProficiencyCommand.register(event.getDispatcher());

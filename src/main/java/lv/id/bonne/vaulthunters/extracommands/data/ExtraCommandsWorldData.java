@@ -57,7 +57,7 @@ public class ExtraCommandsWorldData  extends SavedData
      */
     public void setPaused(boolean paused)
     {
-        this.paused = false;
+        this.paused = paused;
     }
 
 

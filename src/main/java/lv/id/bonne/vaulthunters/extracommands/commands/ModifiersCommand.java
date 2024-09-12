@@ -14,10 +14,10 @@ import iskallia.vault.core.vault.Vault;
 import iskallia.vault.core.vault.modifier.registry.VaultModifierRegistry;
 import iskallia.vault.core.vault.modifier.spi.VaultModifier;
 import iskallia.vault.core.vault.player.Listener;
+import iskallia.vault.core.vault.player.Listeners;
 import iskallia.vault.core.world.storage.VirtualWorld;
 import iskallia.vault.world.data.ServerVaults;
 import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
-import lv.id.bonne.vaulthunters.extracommands.mixin.ListenersAccessor;
 import lv.id.bonne.vaulthunters.extracommands.util.Util;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -320,8 +320,7 @@ public class ModifiersCommand
         {
             // Get active vault listeners.
             Collection<Listener> optionalListeners = vault.getOptional(Vault.LISTENERS).
-                flatMap(listeners -> listeners.getOptional(ListenersAccessor.getMAP())).
-                map(AbstractMap::values).
+                map(Listeners::getAll).
                 orElse(Collections.emptyList());
 
             // Get modifiers.

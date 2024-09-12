@@ -33,7 +33,7 @@ public class MixinVirtualWorld
             vault.ifPresent(Vault.CLOCK, tickClock -> {
                 if (tickClock.has(TickClock.PAUSED))
                 {
-                    if (ExtraCommandsWorldData.get(world).isPaused())
+                    if (ExtraCommandsWorldData.get(world).isPaused() && !world.players().isEmpty())
                     {
                         ci.cancel();
                     }

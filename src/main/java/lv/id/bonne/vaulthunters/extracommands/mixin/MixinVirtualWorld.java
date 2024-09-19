@@ -29,6 +29,14 @@ public class MixinVirtualWorld
     {
         VirtualWorld world = ((VirtualWorld) (Object)this);
 
+        if (world.isMarkedForDeletion())
+        {
+            // Maybe processing clock while world is deleting causes ome issues?
+            // It would be weird, but that is my only remaining code that could affect
+            // getting into loop
+            return;
+        }
+
         ServerVaults.get(world).ifPresent(vault -> {
             vault.ifPresent(Vault.CLOCK, tickClock -> {
                 if (tickClock.has(TickClock.PAUSED))

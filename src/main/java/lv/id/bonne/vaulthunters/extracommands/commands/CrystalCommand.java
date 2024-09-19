@@ -7,6 +7,8 @@
 package lv.id.bonne.vaulthunters.extracommands.commands;
 
 
+import com.google.common.base.Enums;
+import com.google.common.base.Optional;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -14,6 +16,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -55,6 +58,11 @@ public class CrystalCommand
             generateNBTSuggestions(context),
             builder));
 
+    private static final SuggestionProvider<CommandSourceStack> SUGGEST_OBJECTIVE = ((context, builder) ->
+        SharedSuggestionProvider.suggest(
+            generateObjectiveSuggestions(context),
+            builder));
+
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher)
     {
@@ -63,12 +71,13 @@ public class CrystalCommand
         LiteralArgumentBuilder<CommandSourceStack> crystalLiteral = Commands.literal("crystal");
 
         LiteralArgumentBuilder<CommandSourceStack> objective = Commands.literal("setObjective").
-            then(Commands.argument("objective", EnumArgument.enumArgument(Objective.class)).
-                executes(ctx -> setObjective(ctx.getSource().getPlayerOrException(), ctx.getArgument("objective", Objective.class), new CompoundTag())).
+            then(Commands.argument("objective", StringArgumentType.word()).
+                executes(ctx -> setObjective(ctx.getSource().getPlayerOrException(), StringArgumentType.getString(ctx, "objective"), new CompoundTag())).
+                suggests(SUGGEST_OBJECTIVE).
                 then(Commands.argument("parameters", NbtTagArgument.nbtTag()).
                     suggests(SUGGEST_NBT).
                     executes(ctx -> setObjective(ctx.getSource().getPlayerOrException(),
-                        ctx.getArgument("objective", Objective.class),
+                        StringArgumentType.getString(ctx, "objective"),
                         NbtTagArgument.getNbtTag(ctx, "parameters")))));
 
         LiteralArgumentBuilder<CommandSourceStack> theme = Commands.literal("setTheme").
@@ -106,7 +115,7 @@ public class CrystalCommand
     }
 
 
-    private static int setObjective(ServerPlayer player, Objective objective, Tag parameters)
+    private static int setObjective(ServerPlayer player, String objectiveText, Tag parameters)
     {
         ItemStack mainHandItem = player.getMainHandItem();
 
@@ -115,6 +124,16 @@ public class CrystalCommand
             player.sendMessage(new TextComponent("No crystal held in hand"), Util.NIL_UUID);
             throw new IllegalArgumentException("Not crystal in hand");
         }
+
+        Optional<Objective> presentObjective = Enums.getIfPresent(Objective.class, objectiveText);
+
+        if (!presentObjective.isPresent())
+        {
+            player.sendMessage(new TextComponent("Objective is invalid. Specify valid objective"), Util.NIL_UUID);
+            throw new IllegalArgumentException("Not a valid objective.");
+        }
+
+        Objective objective = presentObjective.get();
 
         switch (objective)
         {
@@ -290,21 +309,38 @@ public class CrystalCommand
     private static List<String> generateNBTSuggestions(CommandContext<CommandSourceStack> context)
         throws CommandSyntaxException
     {
-        Objective objective = context.getArgument("objective", Objective.class);
+        String text = StringArgumentType.getString(context, "objective");
+        Optional<Objective> presentObjective = Enums.getIfPresent(Objective.class, text);
 
-        String returnMessage = switch (objective)
+        String returnMessage;
+
+        if (presentObjective.isPresent())
         {
-            case ASCENSION ->  "{stack:1b,player_name:name,player_uuid:UUID,modifiers:{}}";
-            case BOSS -> "{target:{min:1b,max:3b,type:\"uniform\"},wave:{count:4b,type:\"constant\"}}";
-            case COMPOUND -> "{children:{<tag>}}";
-            case MONOLITH -> "{target:{min:1b,max:3b,type:\"uniform\"}}";
-            case PARADOX -> "{goal:BUILD,player_name:name,player_uuid:UUID,expiry:0L,reset_timer:1}";
-            case POLL -> "{id:resource}";
-            case SPEEDRUN -> "{target:{count:1b,type:\"constant\"}}";
-            default -> "";
-        };
+            returnMessage = switch (presentObjective.get())
+            {
+                case ASCENSION -> "{stack:1b,player_name:name,player_uuid:UUID,modifiers:{}}";
+                case BOSS -> "{target:{min:1b,max:3b,type:\"uniform\"},wave:{count:4b,type:\"constant\"}}";
+                case COMPOUND -> "{children:{<tag>}}";
+                case MONOLITH -> "{target:{min:1b,max:3b,type:\"uniform\"}}";
+                case PARADOX -> "{goal:BUILD,player_name:name,player_uuid:UUID,expiry:0L,reset_timer:1}";
+                case POLL -> "{id:resource}";
+                case SPEEDRUN -> "{target:{count:1b,type:\"constant\"}}";
+                default -> "";
+            };
+        }
+        else
+        {
+            returnMessage = "";
+        }
 
         return Collections.singletonList(returnMessage);
+    }
+
+
+    private static List<String> generateObjectiveSuggestions(CommandContext<CommandSourceStack> context)
+        throws CommandSyntaxException
+    {
+        return Arrays.stream(Objective.values()).map(Objective::name).toList();
     }
 
 

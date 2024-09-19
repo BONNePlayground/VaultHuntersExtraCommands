@@ -36,7 +36,8 @@ public class ExtraCommandsWorldData  extends SavedData
     @NotNull
     public CompoundTag save(CompoundTag tag)
     {
-        tag.putBoolean("paused", paused);
+        tag.putBoolean("paused", this.paused);
+        tag.putBoolean("tick", this.tickStop);
         return tag;
     }
 
@@ -52,12 +53,23 @@ public class ExtraCommandsWorldData  extends SavedData
 
 
     /**
+     * Return if dimension is ticked stopped or not.
+     * @return value of tickStop.
+     */
+    public boolean isTickStop()
+    {
+        return this.paused && this.tickStop;
+    }
+
+
+    /**
      * This method sets if vault is paused or not.
      * @param paused new paused value.
      */
-    public void setPaused(boolean paused)
+    public void setPaused(boolean paused, boolean tickStop)
     {
         this.paused = paused;
+        this.tickStop = tickStop;
     }
 
 
@@ -83,6 +95,7 @@ public class ExtraCommandsWorldData  extends SavedData
         {
             ExtraCommandsWorldData data = new ExtraCommandsWorldData();
             data.paused = tag.getBoolean("paused");
+            data.tickStop = tag.getBoolean("tick");
             return data;
         };
     }
@@ -92,6 +105,11 @@ public class ExtraCommandsWorldData  extends SavedData
      * Indicates if world is paused or not.
      */
     private boolean paused;
+
+    /**
+     * Indicates if world is tick-stopped or not.
+     */
+    private boolean tickStop;
 
     /**
      * The datafile name.

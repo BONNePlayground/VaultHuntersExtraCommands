@@ -41,7 +41,7 @@ public class MixinVirtualWorld
             vault.ifPresent(Vault.CLOCK, tickClock -> {
                 if (tickClock.has(TickClock.PAUSED))
                 {
-                    if (ExtraCommandsWorldData.get(world).isPaused() && !world.players().isEmpty())
+                    if (!world.players().isEmpty() && ExtraCommandsWorldData.get(world).isTickStop())
                     {
                         ci.cancel();
                     }

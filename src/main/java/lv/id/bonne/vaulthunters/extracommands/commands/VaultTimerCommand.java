@@ -118,7 +118,7 @@ public class VaultTimerCommand
                     "I am back! Clock is now ticking!");
 
                 ExtraCommandsWorldData extraCommandsData = ExtraCommandsWorldData.get(level);
-                extraCommandsData.setPaused(false);
+                extraCommandsData.setPaused(false, false);
                 extraCommandsData.setDirty();
             }
             else
@@ -127,7 +127,7 @@ public class VaultTimerCommand
                 tickClock.set(TickClock.PAUSED);
 
                 ExtraCommandsWorldData extraCommandsData = ExtraCommandsWorldData.get(level);
-                extraCommandsData.setPaused(tickStop);
+                extraCommandsData.setPaused(true, tickStop);
                 extraCommandsData.setDirty();
 
                 Util.sendGodMessageToAll(level,

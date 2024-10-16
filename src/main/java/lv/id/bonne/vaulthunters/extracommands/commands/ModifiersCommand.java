@@ -12,6 +12,7 @@ import iskallia.vault.core.random.JavaRandom;
 import iskallia.vault.core.vault.Modifiers;
 import iskallia.vault.core.vault.Vault;
 import iskallia.vault.core.vault.modifier.registry.VaultModifierRegistry;
+import iskallia.vault.core.vault.modifier.spi.ModifierContext;
 import iskallia.vault.core.vault.modifier.spi.VaultModifier;
 import iskallia.vault.core.vault.player.Listener;
 import iskallia.vault.core.vault.player.Listeners;
@@ -334,7 +335,8 @@ public class ModifiersCommand
                         for (int i = 0; i < count; i++)
                         {
                             Modifiers.Entry entry = modifiers.getEntries().get(modifiers.getEntries().size() - i - 1);
-                            optionalListeners.forEach(listener -> effect.onListenerAdd((VirtualWorld) level, vault, entry.getContext(), listener));
+                            effect.onVaultAdd((VirtualWorld) level, vault, entry.getContext().copy());
+                            optionalListeners.forEach(listener -> effect.onListenerAdd((VirtualWorld) level, vault, entry.getContext().copy(), listener));
                         }
 
                         Component component;
@@ -371,7 +373,8 @@ public class ModifiersCommand
 
                         anyMatchingModifier.ifPresentOrElse(entry -> {
                             modifiers.getEntries().remove(entry);
-                            optionalListeners.forEach(listener -> effect.onListenerRemove((VirtualWorld) level, vault, entry.getContext(), listener));
+                            effect.onVaultRemove((VirtualWorld) level, vault, entry.getContext().copy());
+                            optionalListeners.forEach(listener -> effect.onListenerRemove((VirtualWorld) level, vault, entry.getContext().copy(), listener));
 
                             Component component;
 

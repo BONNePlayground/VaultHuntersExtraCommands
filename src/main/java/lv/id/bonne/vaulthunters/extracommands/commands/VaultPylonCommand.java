@@ -18,7 +18,7 @@ import iskallia.vault.core.vault.pylon.PylonBuff;
 import iskallia.vault.effect.PylonEffect;
 import iskallia.vault.init.ModEffects;
 import iskallia.vault.init.ModNetwork;
-import iskallia.vault.network.message.PylonConsumeParticleMessage;
+import iskallia.vault.network.message.AbsorbingParticleMessage;
 import iskallia.vault.world.data.PlayerPylons;
 import iskallia.vault.world.data.ServerVaults;
 import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
@@ -113,7 +113,7 @@ public class VaultPylonCommand
             world.playSound(null, player.blockPosition(), SoundEvents.CONDUIT_ACTIVATE, SoundSource.BLOCKS, 1.0F, 2.0F);
 
             ModNetwork.CHANNEL.send(PacketDistributor.ALL.noArg(),
-                new PylonConsumeParticleMessage(player.position(), player.getId(), config.getColor()));
+                new AbsorbingParticleMessage(player.position(), player, config.getColor()));
 
             PylonEffect effect;
 

@@ -40,19 +40,15 @@ public class ProficiencyCommand
 
         LiteralArgumentBuilder<CommandSourceStack> add = Commands.literal("increase").
             then(Commands.argument("player", EntityArgument.players()).
-                then(Commands.argument("type", EnumArgument.enumArgument(ProficiencyType.class)).
-                    then(Commands.argument("level", IntegerArgumentType.integer(1)).
-                        executes(ctx -> addProficiency(EntityArgument.getPlayer(ctx, "player"),
-                            ctx.getArgument("type", ProficiencyType.class),
-                            IntegerArgumentType.getInteger(ctx, "level"))))));
+                then(Commands.argument("level", IntegerArgumentType.integer(1)).
+                    executes(ctx -> addProficiency(EntityArgument.getPlayer(ctx, "player"),
+                        IntegerArgumentType.getInteger(ctx, "level")))));
 
         LiteralArgumentBuilder<CommandSourceStack> reduce = Commands.literal("reduce").
             then(Commands.argument("player", EntityArgument.players()).
-                then(Commands.argument("type", EnumArgument.enumArgument(ProficiencyType.class)).
-                    then(Commands.argument("level", IntegerArgumentType.integer(1)).
-                        executes(ctx -> removeProficiency(EntityArgument.getPlayer(ctx, "player"),
-                            ctx.getArgument("type", ProficiencyType.class),
-                            IntegerArgumentType.getInteger(ctx, "level"))))));
+                then(Commands.argument("level", IntegerArgumentType.integer(1)).
+                    executes(ctx -> removeProficiency(EntityArgument.getPlayer(ctx, "player"),
+                        IntegerArgumentType.getInteger(ctx, "level")))));
 
         dispatcher.register(baseLiteral.then(vaultLiteral.then(add).then(reduce)));
     }
@@ -61,21 +57,17 @@ public class ProficiencyCommand
     /**
      * @return 1
      */
-    private static int addProficiency(ServerPlayer player, ProficiencyType type, int number)
+    private static int addProficiency(ServerPlayer player, int number)
     {
         PlayerProficiencyData proficiencyData = PlayerProficiencyData.get(player.getLevel());
-        proficiencyData.setProficiency(player.getUUID(),
-            type,
-            proficiencyData.getProficiency(player, type) + number);
+        proficiencyData.setAbsoluteProficiency(player.getUUID(),
+            proficiencyData.getAbsoluteProficiency(player) + number);
 
-        Component component = new TextComponent("You have been blessed with extra crafting proficiency in ").
-            withStyle(ChatFormatting.WHITE).
-            append(type.getDisplayName()).
-            append("!").
+        Component component = new TextComponent("You have been blessed with extra crafting proficiency!").
             withStyle(ChatFormatting.WHITE);
 
         Util.sendGodMessageToPlayer(player, component);
-        ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " proficiency in " + type.getDisplayName().getString() + " increased by " + number);
+        ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " proficiency increased by " + number);
 
         return 1;
     }
@@ -84,21 +76,17 @@ public class ProficiencyCommand
     /**
      * @return 1
      */
-    private static int removeProficiency(ServerPlayer player, ProficiencyType type, int number)
+    private static int removeProficiency(ServerPlayer player, int number)
     {
         PlayerProficiencyData proficiencyData = PlayerProficiencyData.get(player.getLevel());
-        proficiencyData.setProficiency(player.getUUID(),
-            type,
-            Math.max(proficiencyData.getProficiency(player, type) - number, 0));
+        proficiencyData.setAbsoluteProficiency(player.getUUID(),
+            Math.max(proficiencyData.getAbsoluteProficiency(player) - number, 0));
 
-        Component component = new TextComponent("You have been punished and I reduced your crafting proficiency in ").
-            withStyle(ChatFormatting.WHITE).
-            append(type.getDisplayName()).
-            append("!").
+        Component component = new TextComponent("You have been punished and I reduced your crafting proficiency!").
             withStyle(ChatFormatting.WHITE);
 
         Util.sendGodMessageToPlayer(player, component);
-        ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " proficiency in " + type.getDisplayName().getString() + " reduced by " + number);
+        ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " proficiency reduced by " + number);
 
         return 1;
     }

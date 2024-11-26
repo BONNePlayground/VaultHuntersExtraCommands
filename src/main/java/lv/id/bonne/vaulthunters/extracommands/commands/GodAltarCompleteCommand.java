@@ -83,17 +83,18 @@ public class GodAltarCompleteCommand
                     {
                         if (entry.getTask() instanceof GodAltarTask godTask)
                         {
-                            if (!complete)
-                            {
-                                godTask.onFail(TaskContext.of(var4, player.getServer()));
-                                ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " failed God Altar!");
-                            }
-                            else
-                            {
-                                Vault vault = ServerVaults.get(((GodAltarTaskAccessor) godTask).getVaultUuid()).orElse(null);
-                                godTask.onSucceed(vault, TaskContext.of(var4, player.getServer()));
-                                ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " completed God Altar!");
-                            }
+                            ServerVaults.get(((GodAltarTaskAccessor) godTask).getVaultUuid()).ifPresent(vault -> {
+                                if (!complete)
+                                {
+                                    godTask.onFail(vault, TaskContext.of(var4, player.getServer()));
+                                    ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " failed God Altar!");
+                                }
+                                else
+                                {
+                                    godTask.onSucceed(vault, TaskContext.of(var4, player.getServer()));
+                                    ExtraCommands.LOGGER.info(player.getDisplayName().getString() + " completed God Altar!");
+                                }
+                            });
                         }
                     }
                 }

@@ -25,7 +25,7 @@ import lv.id.bonne.vaulthunters.extracommands.data.ExtraCommandsWorldData;
 @Mixin(value = VirtualWorld.class)
 public abstract class MixinVirtualWorld
 {
-    @Shadow
+    @Shadow(remap = false)
     public abstract boolean isMarkedForDeletion();
 
 
@@ -42,8 +42,21 @@ public abstract class MixinVirtualWorld
 
         VirtualWorld world = ((VirtualWorld) (Object)this);
 
-        ServerVaults.get(world).ifPresent(vault -> {
-            vault.ifPresent(Vault.CLOCK, tickClock -> {
+        if (!ExtraCommandsWorldData.get(world).isTickStop())
+        {
+            // Not tickstop so do not even check vaults?
+            return;
+        }
+
+        ServerVaults.get(world).ifPresent(vault ->
+        {
+            if (vault.has(Vault.FINISHED))
+            {
+                return;
+            }
+
+            vault.ifPresent(Vault.CLOCK, tickClock ->
+            {
                 if (tickClock.has(TickClock.PAUSED))
                 {
                     if (!world.players().isEmpty() && ExtraCommandsWorldData.get(world).isTickStop())

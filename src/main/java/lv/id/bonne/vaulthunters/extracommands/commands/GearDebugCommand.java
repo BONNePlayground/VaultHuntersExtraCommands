@@ -26,7 +26,7 @@ import iskallia.vault.gear.attribute.VaultGearAttributeRegistry;
 import iskallia.vault.gear.attribute.VaultGearModifier;
 import iskallia.vault.gear.attribute.ability.AbilityLevelAttribute;
 import iskallia.vault.gear.attribute.config.*;
-import iskallia.vault.gear.attribute.custom.EffectAvoidanceGearAttribute;
+import iskallia.vault.gear.attribute.custom.effect.EffectAvoidanceGearAttribute;
 import iskallia.vault.gear.data.VaultGearData;
 import iskallia.vault.gear.item.VaultGearItem;
 import iskallia.vault.init.ModConfigs;
@@ -44,7 +44,6 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
-import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -553,7 +552,7 @@ public class GearDebugCommand
 
         int oldPotential = data.getFirstValue(ModGearAttributes.CRAFTING_POTENTIAL).orElse(0);
 
-        data.updateAttribute(ModGearAttributes.CRAFTING_POTENTIAL, value);
+        data.createOrReplaceAttributeValue(ModGearAttributes.CRAFTING_POTENTIAL, value);
         data.write(mainHandItem);
 
         Util.sendGodMessageToPlayer(player,
@@ -584,7 +583,7 @@ public class GearDebugCommand
             throw new IllegalArgumentException("Not identified vaultgear in hand");
         }
 
-        data.updateAttribute(ModGearAttributes.GEAR_MODEL, model);
+        data.createOrReplaceAttributeValue(ModGearAttributes.GEAR_MODEL, model);
         data.write(mainHandItem);
 
         Util.sendGodMessageToPlayer(player,
@@ -773,7 +772,10 @@ public class GearDebugCommand
 
         if (roll == Roll.ADD || roll == Roll.NONE && getLegendaryAttribute(config, data).isEmpty())
         {
-            VaultGearLegendaryHelper.generateLegendaryModifier(mainHandItem, GearRollHelper.rand);
+            VaultGearLegendaryHelper.generateImprovedModifier(mainHandItem,
+                2,
+                GearRollHelper.rand,
+                List.of(VaultGearModifier.AffixCategory.LEGENDARY));
 
             Util.sendGodMessageToPlayer(player,
                 new TextComponent("Your tool has been blessed!").

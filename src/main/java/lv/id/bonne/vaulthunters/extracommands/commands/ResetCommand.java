@@ -457,7 +457,7 @@ public class ResetCommand
     {
         PlayerProficiencyData proficiencyData = PlayerProficiencyData.get(level);
 
-        if (((PlayerProficiencyDataAccessor) proficiencyData).getPlayerProficiencies().remove(playerUUID) != null)
+        if (((PlayerProficiencyDataAccessor) proficiencyData).getPlayerProficiency().remove(playerUUID) != null)
         {
             if (player != null) proficiencyData.sendProficiencyInformation(player);
             proficiencyData.setDirty();

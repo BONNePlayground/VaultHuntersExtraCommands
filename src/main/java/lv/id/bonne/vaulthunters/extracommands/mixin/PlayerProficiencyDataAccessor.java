@@ -20,6 +20,6 @@ import iskallia.vault.world.data.PlayerProficiencyData;
 @Mixin(value = PlayerProficiencyData.class, remap = false)
 public interface PlayerProficiencyDataAccessor
 {
-    @Accessor("playerProficiencies")
-    Map<UUID, Map<ProficiencyType, Integer>> getPlayerProficiencies();
+    @Accessor("playerProficiency")
+    Map<UUID, Integer> getPlayerProficiency();
 }

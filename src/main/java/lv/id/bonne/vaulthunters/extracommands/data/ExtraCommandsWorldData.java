@@ -70,6 +70,7 @@ public class ExtraCommandsWorldData  extends SavedData
     {
         this.paused = paused;
         this.tickStop = tickStop;
+        this.setDirty();
     }
 
 

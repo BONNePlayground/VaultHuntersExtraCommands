@@ -144,8 +144,8 @@ public class Configuration
                         VaultModifierRegistry.getOpt(ResourceLocation.tryParse(value)).isPresent()));
 
         this.pylonEffects = builder.
-            comment("The list of pylon effects that can be applied to a player. Pylon effects can be found in `pylon_placeholder.json` files in ").
-            comment("the_vault/gen/1.0/palettes/generic/").
+            comment("The list of pylon effects that can be applied to a player. Pylon effects can be found in `pylon_placeholder.json` files in ",
+                "the_vault/gen/1.0/palettes/generic/").
             defineList("pylonEffects",
                 List.of(
                     "the_vault:pylon{Config:{type:effect,effect:regeneration,amplifier:3,duration:300,color:695fe80d,description:\"Grants +3 Regeneration for 15 seconds\"}}",
@@ -180,14 +180,35 @@ public class Configuration
         builder.push("Command Section");
 
         this.mainCommandTag =
-            builder.comment("This option allows to change the main command tag.").
-                comment("Changing value requires server restart.").
-                comment("Default value is: the_vault_extra").
+            builder.comment("This option allows to change the main command tag.",
+                    "Changing value requires server restart.",
+                    "Default value is: the_vault_extra").
                 define("commandTag", "the_vault_extra");
 
         this.pauseAblePlayers =
             builder.comment("List of UUID's that can run `/pause` command in the vault that tick-freezes it.").
                defineList("pauseUUID", Collections.emptyList(), o -> o instanceof String);
+
+        builder.pop();
+
+        builder.push("Player Login Protection");
+
+        this.maxDistance =
+            builder.comment("This option allows to specify distance player needs to move for timer to auto-start.",
+                    "Default value is: 5").
+                define("maxDistance", 5);
+
+        this.loginTimerStop =
+            builder.comment("This option allows to enable stopping vault timer while player is login into vault.",
+                    "This option affects only vaults with 1 player in it.",
+                    "Default value is: false").
+                define("loginTimeProtection", false);
+
+        this.playerTargetProtection =
+            builder.comment("This option allows to prevent other entities to target player while he is in login protection.",
+                    "This option works in all vaults.",
+                    "Default value is: false").
+                define("playerTargetingProtection", false);
 
         builder.pop();
 
@@ -304,6 +325,24 @@ public class Configuration
     }
 
 
+    public boolean getLoginTimerStop()
+    {
+        return this.loginTimerStop.get();
+    }
+
+
+    public int getMaxDistance()
+    {
+        return this.maxDistance.get() * this.maxDistance.get();
+    }
+
+
+    public boolean getPlayerTargetProtection()
+    {
+        return this.playerTargetProtection.get();
+    }
+
+
 // ---------------------------------------------------------------------
 // Section: Variables
 // ---------------------------------------------------------------------
@@ -348,6 +387,21 @@ public class Configuration
      * The config value for changing main command tag.
      */
     private final ForgeConfigSpec.ConfigValue<String> mainCommandTag;
+
+    /**
+     * The config value which indicates if timer must be stopped while player is login to server.
+     */
+    private final ForgeConfigSpec.ConfigValue<Boolean> loginTimerStop;
+
+    /**
+     * The config value which allows to specify distance that player should move for timer to autostart.
+     */
+    private final ForgeConfigSpec.ConfigValue<Integer> maxDistance;
+
+    /**
+     * The config value which allows to prevent other entities to target player entity.
+     */
+    private final ForgeConfigSpec.ConfigValue<Boolean> playerTargetProtection;
 
     /**
      * The general config spec.

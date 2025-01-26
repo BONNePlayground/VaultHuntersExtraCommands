@@ -119,7 +119,6 @@ public class VaultTimerCommand
 
                 ExtraCommandsWorldData extraCommandsData = ExtraCommandsWorldData.get(level);
                 extraCommandsData.setPaused(false, false);
-                extraCommandsData.setDirty();
             }
             else
             {
@@ -128,7 +127,6 @@ public class VaultTimerCommand
 
                 ExtraCommandsWorldData extraCommandsData = ExtraCommandsWorldData.get(level);
                 extraCommandsData.setPaused(true, tickStop);
-                extraCommandsData.setDirty();
 
                 Util.sendGodMessageToAll(level,
                     "I have some pending tasks to do! Can you wait a bit?");

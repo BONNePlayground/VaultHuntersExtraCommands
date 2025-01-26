@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 
 import lv.id.bonne.vaulthunters.extracommands.commands.*;
 import lv.id.bonne.vaulthunters.extracommands.configs.Configuration;
+import lv.id.bonne.vaulthunters.extracommands.util.ExtraEvents;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -25,6 +26,9 @@ public class ExtraCommands
         ExtraCommands.CONFIGURATION = new Configuration();
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Configuration.GENERAL_SPEC, "vault_hunters_extra_commands.toml");
+
+        // Init extra events.
+        ExtraEvents.init();
     }
 
 

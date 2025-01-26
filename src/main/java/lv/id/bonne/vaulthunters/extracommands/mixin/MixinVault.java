@@ -131,6 +131,11 @@ public class MixinVault
         // Entity target player event
         ExtraEvents.ENTITY_TARGET_EVENT.register(vault, data ->
         {
+            if (data.getNewTarget() == null)
+            {
+                return;
+            }
+
             Vec3 position = this.movementTrackingPlayers.getOrDefault(data.getNewTarget().getUUID(), null);
 
             if (position == null)

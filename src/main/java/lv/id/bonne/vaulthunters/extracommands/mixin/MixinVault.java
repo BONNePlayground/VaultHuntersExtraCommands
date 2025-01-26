@@ -48,7 +48,7 @@ public class MixinVault
             // Player leaves the vault. Remove him from tracking list.
 
             data.getListener().getPlayer().ifPresent(player ->
-                this.movementTrackingPlayers.remove(player.getUUID()));
+                this.commands$movementTrackingPlayers.remove(player.getUUID()));
         });
 
         // Player disconnects from server.
@@ -63,7 +63,7 @@ public class MixinVault
             }
 
             // Remove player from tracking list.
-            this.movementTrackingPlayers.remove(data.getEntity().getUUID());
+            this.commands$movementTrackingPlayers.remove(data.getEntity().getUUID());
 
             if (!data.getWorld().players().isEmpty())
             {
@@ -92,14 +92,14 @@ public class MixinVault
                 (preventPlayerTargeting || ExtraCommandsWorldData.get(world).isPaused()))
             {
                 // World is paused. Add player to tracking list.
-                this.movementTrackingPlayers.put(player.getUUID(), player.position());
+                this.commands$movementTrackingPlayers.put(player.getUUID(), player.position());
             }
         });
 
         // Player tick event
         CommonEvents.PLAYER_TICK.register(vault, data ->
         {
-            Vec3 position = this.movementTrackingPlayers.getOrDefault(data.player.getUUID(), null);
+            Vec3 position = this.commands$movementTrackingPlayers.getOrDefault(data.player.getUUID(), null);
 
             if (position == null)
             {
@@ -107,10 +107,11 @@ public class MixinVault
                 return;
             }
 
-            if (position.distanceToSqr(data.player.position()) > ExtraCommands.CONFIGURATION.getMaxDistance())
+
+            if (!MixinVault.commands$insideProtectionRange(position, data.player.position()))
             {
                 // Remove player from tracking list and disable pause.
-                this.movementTrackingPlayers.remove(data.player.getUUID());
+                this.commands$movementTrackingPlayers.remove(data.player.getUUID());
 
                 if (pauseVaultTime)
                 {
@@ -136,7 +137,7 @@ public class MixinVault
                 return;
             }
 
-            Vec3 position = this.movementTrackingPlayers.getOrDefault(data.getNewTarget().getUUID(), null);
+            Vec3 position = this.commands$movementTrackingPlayers.getOrDefault(data.getNewTarget().getUUID(), null);
 
             if (position == null)
             {
@@ -144,7 +145,7 @@ public class MixinVault
                 return;
             }
 
-            if (position.distanceToSqr(data.getNewTarget().position()) <= ExtraCommands.CONFIGURATION.getMaxDistance())
+            if (MixinVault.commands$insideProtectionRange(position, data.getNewTarget().position()))
             {
                 // Do not allow to target player if player have not moved far enough.
                 data.setCanceled(true);
@@ -154,8 +155,24 @@ public class MixinVault
 
 
     /**
+     * This method returns if start and end position is closer than max distance
+     * @param start The start position.
+     * @param end The end position.
+     * @return {@code true} if position is closer than max distance, {@code false} otherwise.
+     */
+    @Unique
+    private static boolean commands$insideProtectionRange(Vec3 start, Vec3 end)
+    {
+        double dX = end.x() - start.x();
+        double dZ = end.z() - start.z();
+
+        return dX * dX + dZ * dZ <= ExtraCommands.CONFIGURATION.getMaxDistance();
+    }
+
+
+    /**
      * The map that stores tracked players and their starting position.
      */
     @Unique
-    private final Map<UUID, Vec3> movementTrackingPlayers = new HashMap<>();
+    private final Map<UUID, Vec3> commands$movementTrackingPlayers = new HashMap<>();
 }

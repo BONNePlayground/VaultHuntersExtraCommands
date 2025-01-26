@@ -100,6 +100,10 @@ The configuration file allows to:
 - list of chaos modifiers
 - list of pylon effects
 - blacklist of modifiers that can not be added.
+- login protection:
+  - max distance - a distance of blocks where protection works
+  - time pause - ability to stop vault timer while player is in protection area
+  - target protection - ability to prevent player to be targeted while in protection area
 
 ### Note:
 Not all gear modifiers can be added. Some of them requires too many input fields, like Effect Clouds. The issue is with chat input size, as it is too small to write all required text.

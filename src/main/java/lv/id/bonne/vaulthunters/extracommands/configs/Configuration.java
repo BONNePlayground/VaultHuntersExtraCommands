@@ -199,7 +199,7 @@ public class Configuration
                 define("maxDistance", 5);
 
         this.loginTimerStop =
-            builder.comment("This option allows to enable stopping vault timer while player is login into vault.",
+            builder.comment("This option allows to enable stopping vault timer while player is loging into vault.",
                     "This option affects only vaults with 1 player in it.",
                     "Default value is: false").
                 define("loginTimeProtection", false);

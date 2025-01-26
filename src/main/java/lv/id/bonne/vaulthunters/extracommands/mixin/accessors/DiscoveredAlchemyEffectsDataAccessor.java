@@ -4,7 +4,7 @@
 //
 
 
-package lv.id.bonne.vaulthunters.extracommands.mixin;
+package lv.id.bonne.vaulthunters.extracommands.mixin.accessors;
 
 
 import org.spongepowered.asm.mixin.Mixin;

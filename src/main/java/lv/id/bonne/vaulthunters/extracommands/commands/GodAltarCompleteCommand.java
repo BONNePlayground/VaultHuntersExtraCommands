@@ -13,15 +13,14 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
-import iskallia.vault.core.vault.Vault;
 import iskallia.vault.task.*;
 import iskallia.vault.task.source.EntityTaskSource;
 import iskallia.vault.task.source.TaskSource;
 import iskallia.vault.world.data.GodAltarData;
 import iskallia.vault.world.data.ServerVaults;
 import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
-import lv.id.bonne.vaulthunters.extracommands.mixin.GodAltarDataAccessor;
-import lv.id.bonne.vaulthunters.extracommands.mixin.GodAltarTaskAccessor;
+import lv.id.bonne.vaulthunters.extracommands.mixin.accessors.GodAltarDataAccessor;
+import lv.id.bonne.vaulthunters.extracommands.mixin.accessors.GodAltarTaskAccessor;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;

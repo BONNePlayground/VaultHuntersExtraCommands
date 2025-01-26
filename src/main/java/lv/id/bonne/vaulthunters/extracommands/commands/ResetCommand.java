@@ -23,7 +23,7 @@ import iskallia.vault.network.message.UpdateTitlesDataMessage;
 import iskallia.vault.skill.PlayerVaultStats;
 import iskallia.vault.world.data.*;
 import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
-import lv.id.bonne.vaulthunters.extracommands.mixin.*;
+import lv.id.bonne.vaulthunters.extracommands.mixin.accessors.*;
 import lv.id.bonne.vaulthunters.extracommands.util.Util;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;

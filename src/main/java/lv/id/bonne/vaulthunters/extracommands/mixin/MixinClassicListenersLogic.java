@@ -12,11 +12,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
 import iskallia.vault.core.vault.Vault;
 import iskallia.vault.core.vault.player.ClassicListenersLogic;
 import iskallia.vault.core.vault.player.Listener;
@@ -24,7 +19,6 @@ import iskallia.vault.core.vault.time.TickClock;
 import iskallia.vault.core.world.storage.VirtualWorld;
 import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
 import lv.id.bonne.vaulthunters.extracommands.data.ExtraCommandsData;
-import net.minecraftforge.server.ServerLifecycleHooks;
 
 
 @Mixin(value = ClassicListenersLogic.class, remap = false)
@@ -38,28 +32,18 @@ public class MixinClassicListenersLogic
         Listener listener,
         CallbackInfoReturnable<Boolean> cir)
     {
-        CompletableFuture<ExtraCommandsData> submitFuture =
-            ServerLifecycleHooks.getCurrentServer().submit(() -> ExtraCommandsData.get(world));
+        ExtraCommandsData extraCommandsData = ExtraCommandsData.get(world);
 
-        try
+        if (listener.has(Listener.ID) &&
+            extraCommandsData.time.containsKey(listener.get(Listener.ID)))
         {
-            ExtraCommandsData extraCommandsData = submitFuture.get(60, TimeUnit.MILLISECONDS);
+            int extraTicks = extraCommandsData.time.getOrDefault(listener.get(Listener.ID), 0) * 20;
 
-            if (listener.has(Listener.ID) &&
-                extraCommandsData.time.containsKey(listener.get(Listener.ID)))
-            {
-                int extraTicks = extraCommandsData.time.getOrDefault(listener.get(Listener.ID), 0) * 20;
+            ExtraCommands.LOGGER.info("Adding extra ticks to the player vault " + extraTicks);
 
-                ExtraCommands.LOGGER.info("Adding extra ticks to the player vault " + extraTicks);
-
-                vault.ifPresent(Vault.CLOCK, clock ->
-                    clock.setIfPresent(TickClock.DISPLAY_TIME,
-                        clock.get(TickClock.DISPLAY_TIME) + extraTicks));
-            }
-        }
-        catch (ExecutionException | InterruptedException | TimeoutException e)
-        {
-            ExtraCommands.LOGGER.error("Could not extra ticks in thread safe-way.");
+            vault.ifPresent(Vault.CLOCK, clock ->
+                clock.setIfPresent(TickClock.DISPLAY_TIME,
+                    clock.get(TickClock.DISPLAY_TIME) + extraTicks));
         }
     }
 }

@@ -21,7 +21,7 @@ import iskallia.vault.network.message.ClientboundHunterParticlesMessage;
 import iskallia.vault.util.MiscUtils;
 import iskallia.vault.util.ServerScheduler;
 import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
-import lv.id.bonne.vaulthunters.extracommands.mixin.AngelBlockAccessor;
+import lv.id.bonne.vaulthunters.extracommands.mixin.accessors.AngelBlockAccessor;
 import lv.id.bonne.vaulthunters.extracommands.util.Util;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;

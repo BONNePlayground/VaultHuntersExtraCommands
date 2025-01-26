@@ -37,7 +37,7 @@ import iskallia.vault.skill.base.SpecializedSkill;
 import iskallia.vault.util.MiscUtils;
 import iskallia.vault.world.data.DiscoveredModelsData;
 import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
-import lv.id.bonne.vaulthunters.extracommands.mixin.VaultGearTierConfigAccessor;
+import lv.id.bonne.vaulthunters.extracommands.mixin.accessors.VaultGearTierConfigAccessor;
 import lv.id.bonne.vaulthunters.extracommands.util.Util;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;

@@ -13,17 +13,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
 
 import iskallia.vault.core.vault.Vault;
 import iskallia.vault.core.vault.time.TickClock;
 import iskallia.vault.core.world.storage.VirtualWorld;
 import iskallia.vault.world.data.ServerVaults;
-import lv.id.bonne.vaulthunters.extracommands.ExtraCommands;
 import lv.id.bonne.vaulthunters.extracommands.data.ExtraCommandsWorldData;
 import net.minecraftforge.server.ServerLifecycleHooks;
 
@@ -49,44 +44,41 @@ public abstract class MixinVirtualWorld
         VirtualWorld world = ((VirtualWorld) (Object) this);
 
         // Get thread save way.
-        CompletableFuture<ExtraCommandsWorldData> submitFuture =
-            ServerLifecycleHooks.getCurrentServer().submit(() -> ExtraCommandsWorldData.get(world));
 
-        try
+        ExtraCommandsWorldData data = ExtraCommandsWorldData.get(world);
+
+        if (!data.isTickStop())
         {
-            ExtraCommandsWorldData data = submitFuture.get(60, TimeUnit.MILLISECONDS);
+            // Not tickstop so do not even check vaults?
+            return;
+        }
 
-            if (!data.isTickStop())
+        if (world.players().isEmpty())
+        {
+            // Not tickstop if there are no players in world.
+            return;
+        }
+
+        // Load worlds into cache.
+        ServerLifecycleHooks.getCurrentServer().execute(() -> ServerVaults.get(world));
+
+        ServerVaults.get(world).ifPresent(vault ->
+        {
+            if (vault.has(Vault.FINISHED))
             {
-                // Not tickstop so do not even check vaults?
                 return;
             }
 
-            // Load worlds into cache.
-            ServerLifecycleHooks.getCurrentServer().execute(() -> ServerVaults.get(world));
-
-            ServerVaults.get(world).ifPresent(vault ->
+            vault.ifPresent(Vault.CLOCK, tickClock ->
             {
-                if (vault.has(Vault.FINISHED))
+                if (tickClock.has(TickClock.PAUSED))
                 {
-                    return;
-                }
-
-                vault.ifPresent(Vault.CLOCK, tickClock ->
-                {
-                    if (tickClock.has(TickClock.PAUSED))
+                    if (!world.players().isEmpty() && data.isTickStop())
                     {
-                        if (!world.players().isEmpty() && data.isTickStop())
-                        {
-                            ci.cancel();
-                        }
+                        ci.cancel();
                     }
-                });
+                }
             });
-        }
-        catch (ExecutionException | InterruptedException | TimeoutException ex)
-        {
-            ExtraCommands.LOGGER.error("Could not safely get tick-stop property.");
-        }
+        });
     }
 }

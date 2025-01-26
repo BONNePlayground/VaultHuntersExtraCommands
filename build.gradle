@@ -154,6 +154,7 @@ dependencies {
     implementation fg.deobf("curse.maven:jei-238222:4593548")
     implementation fg.deobf("curse.maven:sophisticated-core-618298:4665730")
     implementation fg.deobf("curse.maven:sophisticated-backpacks-422301:4637292")
+    implementation fg.deobf("curse.maven:alexs-mobs-426558:3853078")
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

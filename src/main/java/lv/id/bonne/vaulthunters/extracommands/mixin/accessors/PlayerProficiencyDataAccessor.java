@@ -4,7 +4,7 @@
 //
 
 
-package lv.id.bonne.vaulthunters.extracommands.mixin;
+package lv.id.bonne.vaulthunters.extracommands.mixin.accessors;
 
 
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import java.util.Map;
 import java.util.UUID;
 
-import iskallia.vault.gear.crafting.ProficiencyType;
 import iskallia.vault.world.data.PlayerProficiencyData;
 
 
